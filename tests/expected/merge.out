@@ -1,0 +1,7 @@
+CREATE TABLE
+INSERT 2 row(s)
+INSERT 1 row(s)
+id | name | credits | tags
+'u1' | 'Ada Lovelace' | 25 | {'engineer','leader','math'}
+'u2' | 'Grace' | 20 | {'engineer'}
+Bye.

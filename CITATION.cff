@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: "LatticeDB"
+message: "If you use LatticeDB in academic work, please cite:"
+authors:
+  - family-names: "LatticeDB Contributors"
+version: "0.1.0"
+date-released: "2025-09-03"
+repository-code: "https://github.com/hoangsonww/LatticeDB-Next-Gen-DMBS"

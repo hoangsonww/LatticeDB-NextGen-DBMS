@@ -1,0 +1,20 @@
+# Build artifacts
+/build/
+/build-*/
+/out/
+/dist/
+/*.log
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tooling
+.ccache/
+.cache/
