@@ -16,25 +16,10 @@ add_executable(latticedb_cli
   src/vector.cpp
   src/engine.cpp
 )
-
-add_executable(latticedb_server
-  src/server_main.cpp
-  src/http_server.cpp
-  src/util.cpp
-  src/dp.cpp
-  src/crdt.cpp
-  src/catalog.cpp
-  src/storage.cpp
-  src/sql_parser.cpp
-  src/executor.cpp
-  src/vector.cpp
-  src/engine.cpp
-)
+set_target_properties(latticedb_cli PROPERTIES OUTPUT_NAME latticedb)
 
 if (MSVC)
   target_compile_options(latticedb_cli PRIVATE /W4)
-  target_compile_options(latticedb_server PRIVATE /W4)
 else()
   target_compile_options(latticedb_cli PRIVATE -Wall -Wextra -Wpedantic)
-  target_compile_options(latticedb_server PRIVATE -Wall -Wextra -Wpedantic)
 endif()
