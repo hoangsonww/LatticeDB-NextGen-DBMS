@@ -72,6 +72,8 @@ static SelectItem parse_select_item(const std::string& t) {
     if (U=="COUNT(*)") return {SelectItem::Kind::AGG_COUNT, "*"};
     if (util::starts_with(U, "SUM(") && U.back()==')') return {SelectItem::Kind::AGG_SUM, util::trim(t.substr(4, t.size()-5))};
     if (util::starts_with(U, "AVG(") && U.back()==')') return {SelectItem::Kind::AGG_AVG, util::trim(t.substr(4, t.size()-5))};
+    if (util::starts_with(U, "MIN(") && U.back()==')') return {SelectItem::Kind::AGG_MIN, util::trim(t.substr(4, t.size()-5))};
+    if (util::starts_with(U, "MAX(") && U.back()==')') return {SelectItem::Kind::AGG_MAX, util::trim(t.substr(4, t.size()-5))};
     return {SelectItem::Kind::COLUMN, util::trim(t)};
 }
 

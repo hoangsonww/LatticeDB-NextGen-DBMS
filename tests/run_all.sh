@@ -74,6 +74,7 @@ run_case() {
 run_case "temporal"
 run_case "merge" "sorted"
 run_case "vector"
+run_case "agg"
 run_case "update_period"
 run_case "persistence_create"
 run_case "persistence_load"
