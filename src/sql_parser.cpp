@@ -40,6 +40,18 @@ static std::vector<double> parse_vector(const std::string& s) {
     return out;
 }
 
+static std::vector<std::string> split_tuple_vals(const std::string& tuple) {
+    std::vector<std::string> vals; std::string cur; int depth=0;
+    for (char ch : tuple) {
+        if (ch==',' && depth==0) { vals.push_back(util::trim(cur)); cur.clear(); continue; }
+        if (ch=='{' || ch=='[') depth++;
+        else if (ch=='}' || ch==']') depth--;
+        cur.push_back(ch);
+    }
+    if (!cur.empty()) vals.push_back(util::trim(cur));
+    return vals;
+}
+
 static MergeSpec parse_merge(const std::string& s) {
     MergeSpec m;
     auto u = util::upper(util::trim(s));
@@ -66,15 +78,16 @@ static bool read_quoted_path(const std::string& src, std::string* out_path) {
 }
 
 static SelectItem parse_select_item(const std::string& t) {
-    auto U = util::upper(util::trim(t));
+    auto trimmed = util::trim(t);
+    auto U = util::upper(trimmed);
     if (U=="*") return {SelectItem::Kind::STAR, "*"};
     if (U=="DP_COUNT(*)") return {SelectItem::Kind::DP_COUNT, "*"};
     if (U=="COUNT(*)") return {SelectItem::Kind::AGG_COUNT, "*"};
-    if (util::starts_with(U, "SUM(") && U.back()==')') return {SelectItem::Kind::AGG_SUM, util::trim(t.substr(4, t.size()-5))};
-    if (util::starts_with(U, "AVG(") && U.back()==')') return {SelectItem::Kind::AGG_AVG, util::trim(t.substr(4, t.size()-5))};
-    if (util::starts_with(U, "MIN(") && U.back()==')') return {SelectItem::Kind::AGG_MIN, util::trim(t.substr(4, t.size()-5))};
-    if (util::starts_with(U, "MAX(") && U.back()==')') return {SelectItem::Kind::AGG_MAX, util::trim(t.substr(4, t.size()-5))};
-    return {SelectItem::Kind::COLUMN, util::trim(t)};
+    if (util::starts_with(U, "SUM(") && U.back()==')') return {SelectItem::Kind::AGG_SUM, util::trim(trimmed.substr(4, trimmed.size()-5))};
+    if (util::starts_with(U, "AVG(") && U.back()==')') return {SelectItem::Kind::AGG_AVG, util::trim(trimmed.substr(4, trimmed.size()-5))};
+    if (util::starts_with(U, "MIN(") && U.back()==')') return {SelectItem::Kind::AGG_MIN, util::trim(trimmed.substr(4, trimmed.size()-5))};
+    if (util::starts_with(U, "MAX(") && U.back()==')') return {SelectItem::Kind::AGG_MAX, util::trim(trimmed.substr(4, trimmed.size()-5))};
+    return {SelectItem::Kind::COLUMN, trimmed};
 }
 
 ParsedSQL parse_sql(const std::string& ssql) {
@@ -181,7 +194,7 @@ ParsedSQL parse_sql(const std::string& ssql) {
                 }
                 auto tuple = after.substr(i+1, j-i-1);
                 std::vector<Value> row;
-                for (auto val : util::split(tuple, ',')) {
+                for (auto val : split_tuple_vals(tuple)) {
                     auto s = util::trim(val);
                     if (!s.empty() && s.front()=='{') row.push_back(Value::SET(parse_set(s)));
                     else if (!s.empty() && s.front()=='[') row.push_back(Value::VEC(parse_vector(s)));
@@ -328,7 +341,8 @@ ParsedSQL parse_sql(const std::string& ssql) {
         }
 
         if (sysidx!=std::string::npos) {
-            auto after = util::trim(after_from.substr(sysidx + 24));
+            static const std::string kSysTime = " FOR SYSTEM_TIME AS OF ";
+            auto after = util::trim(after_from.substr(sysidx + kSysTime.size()));
             auto U2 = util::upper(after);
             size_t txp = U2.find("TX ");
             if (txp!=std::string::npos) {

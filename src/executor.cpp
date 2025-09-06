@@ -327,7 +327,7 @@ static Value get_col_simple(const TableDef& t, const RowVersion& rv, const std::
 QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
     auto* left = ctx.db->table(q.table);
     if (!left) return {{},{}, "No such table: "+q.table, false};
-    int64_t asof = q.asof_tx.value_or(std::numeric_limits<int64_t>::max());
+    int64_t asof = q.asof_tx.value_or(ctx.db->next_tx - 1);
 
     // Build visible maps
     std::unordered_map<std::string, const RowVersion*> L;
