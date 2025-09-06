@@ -22,8 +22,8 @@ struct JoinClause {
 };
 
 struct SelectItem {
-    enum class Kind { COLUMN, STAR, DP_COUNT, AGG_COUNT, AGG_SUM, AGG_AVG } kind = Kind::COLUMN;
-    std::string column; // for COLUMN/SUM/AVG
+    enum class Kind { COLUMN, STAR, DP_COUNT, AGG_COUNT, AGG_SUM, AGG_AVG, AGG_MIN, AGG_MAX } kind = Kind::COLUMN;
+    std::string column; // for COLUMN/SUM/AVG/MIN/MAX
 };
 
 struct SelectQuery {

@@ -327,7 +327,7 @@ static Value get_col_simple(const TableDef& t, const RowVersion& rv, const std::
 QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
     auto* left = ctx.db->table(q.table);
     if (!left) return {{},{}, "No such table: "+q.table, false};
-    int64_t asof = q.asof_tx.value_or(std::numeric_limits<int64_t>::max());
+    int64_t asof = q.asof_tx.value_or(ctx.db->next_tx - 1);
 
     // Build visible maps
     std::unordered_map<std::string, const RowVersion*> L;
@@ -344,6 +344,8 @@ QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
                 if (it.kind==SelectItem::Kind::AGG_COUNT) res.headers.push_back("count");
                 if (it.kind==SelectItem::Kind::AGG_SUM) res.headers.push_back("sum");
                 if (it.kind==SelectItem::Kind::AGG_AVG) res.headers.push_back("avg");
+                if (it.kind==SelectItem::Kind::AGG_MIN) res.headers.push_back("min");
+                if (it.kind==SelectItem::Kind::AGG_MAX) res.headers.push_back("max");
                 if (it.kind==SelectItem::Kind::DP_COUNT) res.headers.push_back("dp_count");
                 if (it.kind==SelectItem::Kind::STAR) { for (auto& c:left->def.cols) res.headers.push_back(c.name); }
             }
@@ -365,7 +367,14 @@ QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
                 return res;
             }
             // GROUP BY keys
-            struct Agg { int64_t cnt=0; double sum=0; int64_t sum_cnt=0; std::vector<Value> any_cols; };
+            struct Agg {
+                int64_t cnt=0;
+                double sum=0;
+                int64_t sum_cnt=0;
+                double minv=0, maxv=0;
+                bool has_min=false, has_max=false;
+                std::vector<Value> any_cols;
+            };
             std::map<std::string, Agg> groups;
             auto key_of = [&](const RowVersion* rv)->std::string{
                 if (q.group_by.empty()) return std::string("__ALL__");
@@ -385,10 +394,15 @@ QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
                 auto key = key_of(rv);
                 auto& ag = groups[key]; ag.cnt++;
                 for (auto& it : q.items) {
-                    if (it.kind==SelectItem::Kind::AGG_SUM || it.kind==SelectItem::Kind::AGG_AVG) {
+                    if (it.kind==SelectItem::Kind::AGG_SUM || it.kind==SelectItem::Kind::AGG_AVG ||
+                        it.kind==SelectItem::Kind::AGG_MIN || it.kind==SelectItem::Kind::AGG_MAX) {
                         auto v = get_col_simple(left->def, *rv, it.column);
-                        if (std::holds_alternative<int64_t>(v.v)) { ag.sum += (double)std::get<int64_t>(v.v); ag.sum_cnt++; }
-                        else if (std::holds_alternative<double>(v.v)) { ag.sum += std::get<double>(v.v); ag.sum_cnt++; }
+                        if (std::holds_alternative<int64_t>(v.v) || std::holds_alternative<double>(v.v)) {
+                            double d = std::holds_alternative<int64_t>(v.v) ? (double)std::get<int64_t>(v.v) : std::get<double>(v.v);
+                            if (it.kind==SelectItem::Kind::AGG_SUM || it.kind==SelectItem::Kind::AGG_AVG) { ag.sum += d; ag.sum_cnt++; }
+                            if (it.kind==SelectItem::Kind::AGG_MIN) { if (!ag.has_min || d < ag.minv) { ag.minv = d; ag.has_min = true; } }
+                            if (it.kind==SelectItem::Kind::AGG_MAX) { if (!ag.has_max || d > ag.maxv) { ag.maxv = d; ag.has_max = true; } }
+                        }
                     }
                 }
             }
@@ -403,6 +417,8 @@ QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
                     } else if (it.kind==SelectItem::Kind::AGG_COUNT) qr.cols.push_back(Value::I(ag.cnt));
                     else if (it.kind==SelectItem::Kind::AGG_SUM) qr.cols.push_back(Value::D(ag.sum));
                     else if (it.kind==SelectItem::Kind::AGG_AVG) qr.cols.push_back(Value::D(ag.sum_cnt? ag.sum/ag.sum_cnt : 0.0));
+                    else if (it.kind==SelectItem::Kind::AGG_MIN) qr.cols.push_back(Value::D(ag.has_min? ag.minv : 0.0));
+                    else if (it.kind==SelectItem::Kind::AGG_MAX) qr.cols.push_back(Value::D(ag.has_max? ag.maxv : 0.0));
                     else if (it.kind==SelectItem::Kind::STAR) { /* not meaningful in GROUP BY */ }
                 }
                 res.rows.push_back(std::move(qr));
@@ -485,6 +501,8 @@ QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
             } else if (it.kind==SelectItem::Kind::AGG_COUNT) res.headers.push_back("count");
             else if (it.kind==SelectItem::Kind::AGG_SUM) res.headers.push_back("sum");
             else if (it.kind==SelectItem::Kind::AGG_AVG) res.headers.push_back("avg");
+            else if (it.kind==SelectItem::Kind::AGG_MIN) res.headers.push_back("min");
+            else if (it.kind==SelectItem::Kind::AGG_MAX) res.headers.push_back("max");
         }
     }
 
@@ -508,7 +526,13 @@ QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
     // aggregation on join?
     bool has_agg=false; for (auto& it : q.items) if (it.kind!=SelectItem::Kind::COLUMN && it.kind!=SelectItem::Kind::STAR) has_agg=true;
     if (has_agg || !q.group_by.empty()) {
-        struct Agg { int64_t cnt=0; double sum=0; int64_t sum_cnt=0; };
+        struct Agg {
+            int64_t cnt=0;
+            double sum=0;
+            int64_t sum_cnt=0;
+            double minv=0, maxv=0;
+            bool has_min=false, has_max=false;
+        };
         std::map<std::string, Agg> groups;
         auto key_of = [&](const RowVersion* rl, const RowVersion* rr)->std::string{
             if (q.group_by.empty()) return "__ALL__";
@@ -529,10 +553,15 @@ QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
                 auto key = key_of(lv, rr);
                 auto& ag = groups[key]; ag.cnt++;
                 for (auto& it2 : q.items) {
-                    if (it2.kind==SelectItem::Kind::AGG_SUM || it2.kind==SelectItem::Kind::AGG_AVG) {
+                    if (it2.kind==SelectItem::Kind::AGG_SUM || it2.kind==SelectItem::Kind::AGG_AVG ||
+                        it2.kind==SelectItem::Kind::AGG_MIN || it2.kind==SelectItem::Kind::AGG_MAX) {
                         auto v = get_value_qualified(&left->def, lv, &right->def, rr, it2.column);
-                        if (std::holds_alternative<int64_t>(v.v)) { ag.sum += (double)std::get<int64_t>(v.v); ag.sum_cnt++; }
-                        else if (std::holds_alternative<double>(v.v)) { ag.sum += std::get<double>(v.v); ag.sum_cnt++; }
+                        if (std::holds_alternative<int64_t>(v.v) || std::holds_alternative<double>(v.v)) {
+                            double d = std::holds_alternative<int64_t>(v.v) ? (double)std::get<int64_t>(v.v) : std::get<double>(v.v);
+                            if (it2.kind==SelectItem::Kind::AGG_SUM || it2.kind==SelectItem::Kind::AGG_AVG) { ag.sum += d; ag.sum_cnt++; }
+                            if (it2.kind==SelectItem::Kind::AGG_MIN) { if (!ag.has_min || d < ag.minv) { ag.minv = d; ag.has_min = true; } }
+                            if (it2.kind==SelectItem::Kind::AGG_MAX) { if (!ag.has_max || d > ag.maxv) { ag.maxv = d; ag.has_max = true; } }
+                        }
                     }
                 }
             }
@@ -543,6 +572,8 @@ QueryResult exec_select(ExecutionContext& ctx, const SelectQuery& q) {
                 if (it2.kind==SelectItem::Kind::AGG_COUNT) qr.cols.push_back(Value::I(ag.cnt));
                 else if (it2.kind==SelectItem::Kind::AGG_SUM) qr.cols.push_back(Value::D(ag.sum));
                 else if (it2.kind==SelectItem::Kind::AGG_AVG) qr.cols.push_back(Value::D(ag.sum_cnt? ag.sum/ag.sum_cnt : 0.0));
+                else if (it2.kind==SelectItem::Kind::AGG_MIN) qr.cols.push_back(Value::D(ag.has_min? ag.minv : 0.0));
+                else if (it2.kind==SelectItem::Kind::AGG_MAX) qr.cols.push_back(Value::D(ag.has_max? ag.maxv : 0.0));
                 else if (it2.kind==SelectItem::Kind::COLUMN) qr.cols.push_back(Value::Null()); // placeholder
             }
             res.rows.push_back(std::move(qr));

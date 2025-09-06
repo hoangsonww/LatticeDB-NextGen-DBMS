@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <unistd.h>
 #include "engine.h"
 
 static void print_value(const Value& v) {
@@ -37,10 +38,11 @@ int main() {
     std::cin.tie(nullptr);
 
     Engine eng;
-    std::cout << "ForgeDB (C++17) - type EXIT to quit\n";
+    bool interactive = isatty(fileno(stdin)) && isatty(fileno(stdout));
+    if (interactive) std::cout << "ForgeDB (C++17) - type EXIT to quit\n";
     std::string line, sql;
     while (true) {
-        std::cout << "fdb> " << std::flush;
+        if (interactive) std::cout << "fdb> " << std::flush;
         if (!std::getline(std::cin, line)) break;
         if (line.empty()) continue;
         sql += line;
