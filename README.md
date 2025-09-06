@@ -5,6 +5,10 @@
 > [!IMPORTANT]
 > **Mission**: Make conflict-free multi-master, time-travel, privacy-preserving analytics, streaming, and vector search **first-class** in a relational DB—without bolted-on sidecars.
 
+<p align="center">
+  <img src="docs/logo.png" alt="LatticeDB Logo" width="50%"/>
+</p>
+
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=c%2B%2B&logoColor=white&style=for-the-badge)](https://isocpp.org/)
 [![Bash](https://img.shields.io/badge/Bash-Scripts-4EAA25?logo=gnubash&logoColor=white&style=for-the-badge)](https://www.gnu.org/software/bash/)
 [![Python](https://img.shields.io/badge/Python-Helper%20Tools-3776AB?logo=python&logoColor=white&style=for-the-badge)](https://www.python.org/)
@@ -25,6 +29,12 @@
 [![WSL2](https://img.shields.io/badge/WSL2-Dev-0078D6?logo=windows&logoColor=white&style=for-the-badge)](https://learn.microsoft.com/windows/wsl/)
 [![Mermaid](https://img.shields.io/badge/Mermaid-Diagrams-1B6AC6?logo=mermaid&logoColor=white&style=for-the-badge)](https://mermaid.js.org/)
 [![EditorConfig](https://img.shields.io/badge/EditorConfig-Consistent%20Style-000000?logo=editorconfig&logoColor=white&style=for-the-badge)](https://editorconfig.org/)
+[![Vite](https://img.shields.io/badge/Vite-Bundler-646CFF?logo=vite&logoColor=white&style=for-the-badge)](https://vitejs.dev/)
+[![React Query](https://img.shields.io/badge/React%20Query-Data%20Fetching-FF4154?logo=reactquery&logoColor=white&style=for-the-badge)](https://tanstack.com/query/latest)
+[![Vercel](https://img.shields.io/badge/Vercel-Hosting-000000?logo=vercel&logoColor=white&style=for-the-badge)](https://vercel.com/)
+[![React](https://img.shields.io/badge/React-GUI-61DAFB?logo=react&logoColor=black&style=for-the-badge)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Frontend-3178C6?logo=typescript&logoColor=white&style=for-the-badge)](https://www.typescriptlang.org/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Styling-06B6D4?logo=tailwindcss&logoColor=white&style=for-the-badge)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3DA639?logo=open-source-initiative&logoColor=white&style=for-the-badge)](LICENSE)
 
 ## Table of Contents
@@ -33,6 +43,7 @@
 * [Feature Matrix & How It’s Different](#feature-matrix--how-its-different)
 * [Architecture Overview](#architecture-overview)
 * [Quick Start](#quick-start)
+* [Start with GUI](#start-with-gui)
 * [Core Concepts & Examples](#core-concepts--examples)
 
   * [Mergeable Relational Tables (MRT)](#mergeable-relational-tables-mrt)
@@ -198,6 +209,37 @@ EXIT;
 
 > [!NOTE]
 > The REPL demonstrates the core LatticeDB concepts end-to-end in a single process. For distributed mode, use the coordinator + shard binaries (see `/cmd`).
+
+## Start with GUI
+
+You can also try LatticeDB with a simple GUI: (optional)
+
+```angular2html
+# HOW TO RUN (server + GUI)
+# 1) Build the HTTP bridge:
+#    cmake -S . -B build && cmake --build build -j
+#    ./build/latticedb_server
+#
+# 2) Start the GUI:
+#    cd gui
+#    npm install
+#    npm run dev
+#
+# Open http://localhost:5173
+#
+# Example query:
+# CREATE TABLE people (id TEXT PRIMARY KEY, name TEXT MERGE lww, credits INT MERGE sum_bounded(0,1000000), profile_vec VECTOR<4>);
+# INSERT INTO people (id,name,credits,profile_vec) VALUES ('u1','Ada',10,[0.1,0.2,0.3,0.4]);
+# SELECT * FROM people;
+```
+
+Then open your browser to [http://localhost:5173](http://localhost:5173). Feel free to modify and run the example queries above.
+
+_How the GUI looks..._
+
+<p align="center">
+  <img src="docs/GUI.png" alt="LatticeDB GUI Screenshot" width="100%"/>
+</p>
 
 ## Core Concepts & Examples
 
