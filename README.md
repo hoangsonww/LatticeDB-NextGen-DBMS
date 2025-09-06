@@ -1,6 +1,6 @@
 # LatticeDB - The Next-Gen, Mergeable Temporal Relational Database 🗂️
 
-*A next-generation, mergeable, temporal, policy-aware relational DBMS with a built-in .*
+*A next-generation, mergeable, temporal, policy-aware relational DBMS with a built-in GUI.*
 
 > [!IMPORTANT]
 > **Mission**: Make conflict-free multi-master, time-travel, privacy-preserving analytics, streaming, and vector search **first-class** in a relational DB—without bolted-on sidecars.
