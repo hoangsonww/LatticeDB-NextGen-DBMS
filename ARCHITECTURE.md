@@ -27,64 +27,67 @@
 
 ```mermaid
 flowchart TD
-    subgraph Client
-      A[Drivers/SDKs] -->|SQL/LatticeSQL| B[Coordinators]
+    subgraph "Client Layer"
+      GUI[Web GUI - React/TypeScript]
+      CLI[CLI Interface]
+      SDK[Language SDKs]
     end
 
-    subgraph ControlPlane
-      P[Catalog & Policy Service]
-      Q[Optimizer & Cost Model]
-      R[Scheduler/QoS]
-      S[Key Management & Secrets]
-      P <--> Q
-      Q <--> R
-      S --> B
+    subgraph "Control Plane"
+      CAT[Catalog Service]
+      OPT[Query Optimizer]
+      POL[Policy Engine]
+      SCH[Scheduler/QoS]
+      DP[Differential Privacy]
     end
 
-    B <--> P
-    B <--> Q
-    B <--> R
-
-    subgraph DataPlane
-      E[Executors]
-      F1[Storage Shard 1]
-      F2[Storage Shard 2]
-      F3[Storage Shard N]
-      L[Transactional Log / Paxos]
-      X[Streaming Runtime]
-      V[Vector Index Nodes]
-      E <--> F1
-      E <--> F2
-      E <--> F3
-      E <--> V
-      E <--> X
-      L <--> F1
-      L <--> F2
-      L <--> F3
+    subgraph "Query Processing"
+      PARSE[SQL Parser]
+      ANALYZE[Query Analyzer]
+      PLAN[Query Planner]
+      EXEC[Query Executor]
     end
 
-    subgraph Replication
-      G[Geo Sites]
-      H[CRDT Merge Layer]
-      G <--> H
-      H <--> F1
-      H <--> F2
-      H <--> F3
+    subgraph "Storage Engine"
+      ULS[Universal Log Store]
+      MVCC[MVCC Controller]
+      BT[B+ Tree Indexes]
+      VEC[Vector Indexes - HNSW]
+      TEMP[Temporal Indexes]
     end
 
-    subgraph Observability
-      O1[Tracing]
-      O2[Metrics]
-      O3[Audit/Lineage Store]
+    subgraph "CRDT Engine"
+      LWW[LWW Register]
+      GSET[G-Set]
+      ORSET[OR-Set]
+      COUNTER[PN-Counter]
+      MERGER[Merge Resolver]
     end
 
-    B --> O1
-    E --> O1
-    E --> O2
-    P --> O3
-    F1 --> O3
-    F2 --> O3
-    F3 --> O3
+    subgraph "Security Layer"
+      RLS[Row-Level Security]
+      CLS[Column-Level Security]
+      AUDIT[Audit Logger]
+      MASK[Data Masking]
+    end
+
+    GUI --> PARSE
+    CLI --> PARSE
+    SDK --> PARSE
+    PARSE --> ANALYZE
+    ANALYZE --> OPT
+    OPT --> PLAN
+    PLAN --> EXEC
+    EXEC --> MVCC
+    MVCC --> ULS
+    EXEC --> POL
+    POL --> RLS
+    POL --> CLS
+    POL --> DP
+    MERGER --> LWW
+    MERGER --> GSET
+    MERGER --> ORSET
+    MERGER --> COUNTER
 ```
 
 ---
@@ -105,43 +108,51 @@ erDiagram
     TABLE ||--o{ ROW_VERSION : has
     POLICY ||--o{ POLICY_BINDING : applies_to
     ROW_VERSION }o--|| LINEAGE_EVENT : derived_from
-    "USER" ||--o{ QUERY_SESSION : initiates
+    USER ||--o{ QUERY_SESSION : initiates
     QUERY_SESSION ||--o{ AUDIT_LOG : writes
+    TABLE ||--o{ INDEX : has
+    TABLE ||--o{ MATERIALIZED_VIEW : source
 
     TABLE {
         uuid table_id PK
         string name
         json schema_versions
         json merge_policy
+        string crdt_type
+        interval retention_period
     }
     ROW_VERSION {
         uuid row_id
         uuid table_id FK
-        timestamptz tx_from
-        timestamptz tx_to
+        bigint csn_min
+        bigint csn_max
         timestamptz valid_from
         timestamptz valid_to
         jsonB data
         jsonB provenance
+        vector_clock merge_clock
     }
     POLICY {
         uuid policy_id PK
         string name
-        string type
+        string type "RLS|CLS|DP|MASK"
         json spec
+        float epsilon_budget
     }
-    POLICY_BINDING {
-        uuid binding_id PK
-        uuid policy_id FK
+    INDEX {
+        uuid index_id PK
         uuid table_id FK
-        string scope
+        string type "BTREE|HNSW|BITMAP|BLOOM"
+        json config
+        string columns
     }
-    LINEAGE_EVENT {
-        uuid event_id PK
-        uuid row_id FK
-        string op
-        json details
-        timestamptz at
+    MATERIALIZED_VIEW {
+        uuid view_id PK
+        string name
+        uuid source_table FK
+        string refresh_type "CONTINUOUS|MANUAL"
+        interval refresh_interval
+        string window_type "TUMBLE|HOP|SESSION"
     }
 ```
 
@@ -159,15 +170,31 @@ erDiagram
 
 ```mermaid
 flowchart LR
-    subgraph ULS["ULS Segment"]
-        RP[Row Pages] --- CP[Column Projections]
-        RP --- IDX[Index Blocks]
-        RP --- META[Provenance/Temporal Footers]
+    subgraph "Write Path"
+        WRITE[Write Request] --> WAL[Write-Ahead Log]
+        WAL --> MEMTABLE[MemTable]
+        MEMTABLE --> FLUSH[Flush Controller]
+        FLUSH --> SSTABLE[SSTable]
     end
 
-    WAL[Write-Ahead Log] --> RP
-    COMPACTOR --> RP
-    CRDT[CRDT Delta Files] --> COMPACTOR
+    subgraph "Read Path"
+        READ[Read Request] --> CACHE[Page Cache]
+        CACHE --> MEMTABLE
+        CACHE --> L0[L0 SSTables]
+        L0 --> L1[L1 SSTables]
+        L1 --> L2[L2 SSTables]
+    end
+
+    subgraph "Compaction"
+        L0 --> COMPACT[Compactor]
+        L1 --> COMPACT
+        COMPACT --> L2
+    end
+
+    subgraph "CRDT Merge"
+        DELTA[CRDT Deltas] --> MERGER[Merge Engine]
+        MERGER --> MEMTABLE
+    end
 ```
 
 ### 4.2 Mergeable Relational Tables (MRT)
@@ -190,34 +217,51 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant B as Coordinator
-    participant R as Scheduler / QoS
+    participant P as Parser
+    participant O as Optimizer
     participant E as Executor
-    participant S as Storage Shard
-    participant L as Log
-    C->>B: BEGIN and submit plan
-    B->>R: classify workload and admit
-    R-->>B: slot granted
-    B->>E: dispatch plan with snapshot ts
-    E->>S: MVCC read snapshot
-    E->>S: write intents
-    S->>L: append WAL
-    L-->>S: fsync ack
-    S-->>E: commit apply
-    E-->>B: success (row versions, lineage)
-    B-->>C: COMMIT ok (txid)
+    participant M as MVCC Controller
+    participant S as Storage Engine
+    participant A as Audit Logger
+
+    C->>P: SQL Query
+    P->>O: AST + Temporal Clauses
+    O->>O: Apply Policy Rules
+    O->>E: Physical Plan
+    E->>M: Begin Transaction (CSN)
+    M->>S: Read at CSN
+    S-->>E: Result Set
+    E->>E: Apply DP Noise
+    E->>A: Log Access
+    E-->>C: Query Results
 ```
 
 **CRDT merge state**
 
 ```mermaid
 stateDiagram-v2
-    [*] --> LocalDelta
-    LocalDelta --> ShipDelta: gossip/replicate
-    ShipDelta --> MergeQueue
-    MergeQueue --> Resolve: per-column policy
-    Resolve --> Apply
-    Apply --> [*]
+    [*] --> LocalWrite: Write Operation
+    LocalWrite --> CRDTDelta: Generate Delta
+    CRDTDelta --> VectorClock: Update Clock
+    VectorClock --> Broadcast: Ship to Peers
+
+    Broadcast --> RemoteDelta: Receive Remote
+    RemoteDelta --> CompareClocks: Check Causality
+
+    CompareClocks --> DirectApply: If Causal
+    CompareClocks --> MergeResolve: If Concurrent
+
+    MergeResolve --> LWW: Last-Writer-Wins
+    MergeResolve --> Union: Set Union
+    MergeResolve --> Custom: Custom Resolver
+
+    LWW --> Apply
+    Union --> Apply
+    Custom --> Apply
+    DirectApply --> Apply
+
+    Apply --> UpdateStorage: Persist Merged State
+    UpdateStorage --> [*]
 ```
 
 ---
@@ -314,13 +358,27 @@ AS SELECT sku, count(*) AS c
 
 ```mermaid
 flowchart TD
-  U[User/Service] --> A[AuthN]
-  A --> Ctx[Security Context]
-  Ctx --> P[Policy Engine]
-  P -->|RLS/CLS| QP[Query Plan]
-  P -->|DP Budget| QP
-  QP --> EXE[Executor]
-  EXE --> AUD[Audit/Lineage Store]
+    U[User/Service] --> AUTH[Authentication]
+    AUTH --> CTX[Security Context]
+    CTX --> PE[Policy Engine]
+
+    PE --> RLS[Row-Level Security]
+    PE --> CLS[Column-Level Security]
+    PE --> DP[Differential Privacy]
+    PE --> MASK[Data Masking]
+
+    RLS --> QP[Query Plan]
+    CLS --> QP
+    DP --> BUDGET[Epsilon Budget Check]
+    BUDGET --> QP
+    MASK --> QP
+
+    QP --> EXEC[Executor]
+    EXEC --> NOISE[Add DP Noise]
+    EXEC --> AUDIT[Audit Logger]
+    AUDIT --> LINEAGE[Lineage Store]
+
+    EXEC --> RESULT[Filtered Results]
 ```
 
 ---
@@ -335,12 +393,45 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    SRC["Table CDC / Kafka"] --> PARSE[Decoder]
-    PARSE --> WTR["Watermark & Window Assign"]
-    WTR --> AGG["Incremental Aggregation"]
-    AGG --> SNAP["State Store<br/>(ULS)"]
-    SNAP --> EMIT[Emitter]
-    EMIT --> MV["Materialized View"]
+    subgraph "Input Sources"
+        TABLE[Table CDC]
+        KAFKA[Kafka Stream]
+        WS[WebSocket]
+    end
+
+    subgraph "Stream Processing"
+        INGEST[Stream Ingestion]
+        WINDOW[Window Assignment]
+        AGG[Aggregation Engine]
+        JOIN[Stream-Table Join]
+    end
+
+    subgraph "Window Types"
+        TUMBLE[Tumbling Window]
+        HOP[Hopping Window]
+        SESSION[Session Window]
+    end
+
+    subgraph "Output"
+        MV[Materialized View]
+        ALERT[Alert Monitor]
+        EXPORT[External Sink]
+    end
+
+    TABLE --> INGEST
+    KAFKA --> INGEST
+    WS --> INGEST
+    INGEST --> WINDOW
+    WINDOW --> TUMBLE
+    WINDOW --> HOP
+    WINDOW --> SESSION
+    TUMBLE --> AGG
+    HOP --> AGG
+    SESSION --> AGG
+    AGG --> JOIN
+    JOIN --> MV
+    JOIN --> ALERT
+    JOIN --> EXPORT
 ```
 
 ---
@@ -507,15 +598,109 @@ CALL mv.backfill('revenue_daily', source => 'payments_archive', from => '2025-01
 
 ---
 
-## 23) Roadmap Highlights
+## 23) Current Implementation Status
 
-* **Phase 1:** Core MVCC, ULS storage, temporal/lineage, RLS/CLS policies, streaming MVs.
-* **Phase 2:** MRT CRDT layer + geo multi-master; DP framework; vector indexes.
-* **Phase 3:** TEE policy execution; learned index plugin GA; advanced workload QoS.
+### Completed Components (Header-Only C++17)
+
+#### Storage Layer (`src/storage/`)
+- **`disk_manager.h`**: Page-based disk I/O with 4KB pages, allocation tracking
+- **`page.h`**: Page abstraction with guards for safe access
+- **`table_page.h`**: Slotted page layout for table data
+
+#### Buffer Management (`src/buffer/`)
+- **`buffer_pool_manager.h`**: LRU eviction policy, page pinning/unpinning
+- **`replacer.h`**: Clock replacement algorithm implementation
+
+#### Index Structures (`src/index/`)
+- **`b_plus_tree.h`**: Template-based B+ tree with configurable fanout
+- **`b_plus_tree_page.h`**: Internal and leaf page layouts
+- **`index_iterator.h`**: Range scan support
+
+#### Query Processing (`src/query/`)
+- **`sql_parser.h`**: Recursive descent parser for LatticeSQL
+  - Supports CRDT merge syntax (`MERGE lww`, `MERGE sum_bounded`)
+  - Temporal queries (`FOR SYSTEM_TIME AS OF`)
+  - Vector operations (`DISTANCE`, `VECTOR<D>`)
+  - Differential privacy (`DP_COUNT`, `SET DP_EPSILON`)
+- **`query_planner.h`**: Cost-based optimizer with rule transformations
+- **`query_executor.h`**: Volcano-style iterator model
+
+#### Type System (`src/types/`)
+- **`value.h`**: Universal value container supporting:
+  - Basic types (INT, TEXT, DECIMAL, TIMESTAMP)
+  - Collections (SET<T>, MAP<K,V>)
+  - Vectors (VECTOR<D>)
+- **`tuple.h`**: Row representation with schema
+- **`schema.h`**: Table metadata and column definitions
+
+#### Transaction Management (`src/transaction/`)
+- **`transaction.h`**: MVCC with isolation levels
+- **`lock_manager.h`**: 2PL with deadlock detection
+
+#### Advanced Features
+- **`src/ml/vector_search.h`**: HNSW and IVF implementations
+- **`src/stream/stream_processor.h`**: Windowing functions
+- **`src/security/security_manager.h`**: RLS/CLS policies
+
+### Executable Components
+
+#### REPL (`main.cpp`)
+- 288 lines of functional CLI interface
+- Supports all LatticeSQL extensions
+- In-memory storage with persistence (`SAVE DATABASE`)
+
+#### HTTP Server (`server_main.cpp`)
+- 118 lines REST API bridge
+- JSON request/response format
+- Connects GUI to database engine
+
+### Web GUI (`gui/`)
+
+#### Technology Stack
+- **React 18** with TypeScript
+- **Vite** for fast HMR development
+- **TailwindCSS** for responsive design
+- **Zustand** for state management with localStorage persistence
+- **Monaco Editor** for SQL editing
+
+#### Features
+- Dark/light mode with system preference detection
+- SQL syntax highlighting and auto-completion
+- Query history with success/failure tracking
+- Favorites management
+- Schema browser with table exploration
+- Mock mode with comprehensive sample data
+- Results export (CSV/TSV)
+- Differential privacy controls
+- Temporal query support
+
+### Test Suite (`tests/cases/`)
+
+#### Core Feature Tests
+- `temporal.sql`: Time-travel queries
+- `merge.sql`: CRDT conflict resolution
+- `vector.sql`: Similarity search
+- `dp.sql`: Differential privacy
+- `agg.sql`: Aggregate functions
+
+#### Advanced Tests (New)
+- `transactions.sql`: ACID properties, isolation levels
+- `joins.sql`: All join types, lateral joins
+- `indexes.sql`: B+ tree, vector indexes
+- `schema_evolution.sql`: Online DDL
+- `advanced_merge.sql`: Complex CRDT scenarios
+- `streaming.sql`: Materialized views, windowing
+- `security.sql`: RLS, audit logging
+
+## 24) Roadmap Highlights
+
+* **Phase 1** ✅: Core MVCC, ULS storage, temporal/lineage, RLS/CLS policies, streaming MVs.
+* **Phase 2** 🚧: MRT CRDT layer + geo multi-master; DP framework; vector indexes.
+* **Phase 3** 📋: TEE policy execution; learned index plugin GA; advanced workload QoS.
 
 ---
 
-## 24) Risks & Mitigations
+## 25) Risks & Mitigations
 
 * **Complexity of merge semantics:** ship safe defaults; formal specs; verifier tests.
 * **DP usability:** budget tooling + guardrails; templates for common stats.
@@ -523,7 +708,7 @@ CALL mv.backfill('revenue_daily', source => 'payments_archive', from => '2025-01
 
 ---
 
-## 25) Glossary
+## 26) Glossary
 
 * **MRT:** Mergeable Relational Table (CRDT-backed).
 * **Bitemporal:** transaction & valid time tracked.
@@ -532,7 +717,7 @@ CALL mv.backfill('revenue_daily', source => 'payments_archive', from => '2025-01
 
 ---
 
-## 26) Appendix: Mini Spec Snippets
+## 28) Appendix: Mini Spec Snippets
 
 ### A) Table DDL with Policies & Vector
 
@@ -570,7 +755,7 @@ COMMIT;
 
 ---
 
-## 27) Additional Diagrams
+## 29) Additional Diagrams
 
 **Bitemporal query planning**
 

@@ -6,7 +6,7 @@
 html, body, #root { height: 100%; }
 
 .card {
-  @apply bg-white rounded-2xl shadow-soft border border-gray-100;
+  @apply rounded-2xl shadow-soft border;
 }
 .btn {
   @apply inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-primary text-white hover:bg-primary/90 transition;
