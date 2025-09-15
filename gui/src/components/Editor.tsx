@@ -112,11 +112,13 @@ export default function SqlEditor() {
             suggestOnTriggerCharacters: true,
             acceptSuggestionOnEnter: "on",
             tabCompletion: "on",
+            // @ts-ignore
             wordBasedSuggestions: true,
             contextmenu: true,
             mouseWheelZoom: true,
             smoothScrolling: true,
             cursorBlinking: "smooth",
+            // @ts-ignore
             cursorSmoothCaretAnimation: true,
             fontLigatures: true,
             bracketPairColorization: { enabled: true },
