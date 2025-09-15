@@ -612,57 +612,30 @@ graph TB
 
 ### Component Architecture
 
+{% raw %}
 ```typescript
-// gui/src/store.ts
-interface AppState {
-    // Query state
-    currentQuery: string;
-    queryHistory: Query[];
-    queryResults: QueryResult | null;
-
-    // Connection state
-    connection: Connection | null;
-    mockMode: boolean;
-
-    // UI state
-    darkMode: boolean;
-    activeTab: TabType;
-
-    // Temporal state
-    txAsOf: string | null;
-    validAsOf: string | null;
-
-    // Privacy state
-    dpEnabled: boolean;
-    dpEpsilon: number;
-
-    // Actions
-    executeQuery: (query: string) => Promise<void>;
-    setConnection: (conn: Connection) => void;
-    toggleDarkMode: () => void;
-}
-
 // gui/src/components/QueryEditor.tsx
 const QueryEditor: React.FC = () => {
-    const { currentQuery, executeQuery } = useStore();
+  const { currentQuery, executeQuery } = useStore();
 
-    return (
-        <MonacoEditor
-            language="sql"
-            theme={darkMode ? 'vs-dark' : 'light'}
-            value={currentQuery}
-            options={{
-                minimap: { enabled: false },
-                formatOnPaste: true,
-                formatOnType: true,
-                autoClosingBrackets: 'always',
-                suggestOnTriggerCharacters: true
-            }}
-            onChange={handleChange}
-        />
-    );
+  return (
+    <MonacoEditor
+      language="sql"
+      theme={darkMode ? 'vs-dark' : 'light'}
+      value={currentQuery}
+      options={{
+        minimap: { enabled: false },
+        formatOnPaste: true,
+        formatOnType: true,
+        autoClosingBrackets: 'always',
+        suggestOnTriggerCharacters: true
+      }}
+      onChange={handleChange}
+    />
+  );
 };
 ```
+{% endraw %}
 
 ## Performance Considerations
 
