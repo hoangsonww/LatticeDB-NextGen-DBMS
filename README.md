@@ -39,25 +39,24 @@
 
 ## Table of Contents
 
-* [Why LatticeDB](#why-latticedb)
-* [Feature Matrix & How It’s Different](#feature-matrix--how-its-different)
-* [Architecture Overview](#architecture-overview)
-* [Quick Start](#quick-start)
-* [Start with GUI](#start-with-gui)
-* [Core Concepts & Examples](#core-concepts--examples)
-
-  * [Mergeable Relational Tables (MRT)](#mergeable-relational-tables-mrt)
-  * [Bitemporal Time Travel & Lineage](#bitemporal-time-travel--lineage)
-  * [Policy-as-Data & Differential Privacy](#policy-as-data--differential-privacy)
-  * [Vectors & Semantic Joins](#vectors--semantic-joins)
-  * [Streaming Materialized Views](#streaming-materialized-views)
-* [Storage, Transactions & Replication](#storage-transactions--replication)
-* [SQL: LatticeSQL Extensions](#sql-latticesql-extensions)
-* [Operations & Observability](#operations--observability)
-* [Roadmap](#roadmap)
-* [Limitations](#limitations)
-* [Contributing](#contributing)
-* [License](#license)
+- [Why LatticeDB](#why-latticedb)
+- [Feature Matrix & How It’s Different](#feature-matrix--how-its-different)
+- [Architecture Overview](#architecture-overview)
+- [Quick Start](#quick-start)
+- [Start with GUI](#start-with-gui)
+- [Core Concepts & Examples](#core-concepts--examples)
+  - [Mergeable Relational Tables (MRT)](#mergeable-relational-tables-mrt)
+  - [Bitemporal Time Travel & Lineage](#bitemporal-time-travel--lineage)
+  - [Policy-as-Data & Differential Privacy](#policy-as-data--differential-privacy)
+  - [Vectors & Semantic Joins](#vectors--semantic-joins)
+  - [Streaming Materialized Views](#streaming-materialized-views)
+- [Storage, Transactions & Replication](#storage-transactions--replication)
+- [SQL: LatticeSQL Extensions](#sql-latticesql-extensions)
+- [Operations & Observability](#operations--observability)
+- [Roadmap](#roadmap)
+- [Limitations](#limitations)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Why LatticeDB
 
