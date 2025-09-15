@@ -93,61 +93,50 @@ LatticeDB focuses on features that major RDBMS generally **don’t provide nativ
 
 ```mermaid
 flowchart TD
-    subgraph Client
-      A[Drivers/SDKs] -->|SQL/LatticeSQL| B[Coordinators]
+    subgraph "Client Layer"
+      GUI[Web GUI]
+      CLI[CLI Client]
+      SDK[SDKs]
     end
 
-    subgraph ControlPlane
-      P[Catalog & Policy Service]
-      Q[Optimizer & Cost Model]
-      R[Scheduler/QoS]
-      S[Key & Secrets]
-      P <--> Q
-      Q <--> R
-      S --> B
+    subgraph "Query Engine"
+      PARSE[SQL Parser]
+      OPT[Query Optimizer]
+      EXEC[Executor]
     end
 
-    B <--> P
-    B <--> Q
-    B <--> R
-
-    subgraph DataPlane
-      E[Executors]
-      F1[Storage Shard 1]
-      F2[Storage Shard 2]
-      F3[Storage Shard N]
-      L[Transactional Log]
-      X[Streaming Runtime]
-      V[Vector Index Nodes]
-      E <--> F1
-      E <--> F2
-      E <--> F3
-      E <--> V
-      E <--> X
-      L <--> F1
-      L <--> F2
-      L <--> F3
+    subgraph "Storage Layer"
+      MVCC[MVCC Controller]
+      ULS[Universal Log Store]
+      IDX[B+ Tree & Vector Indexes]
     end
 
-    subgraph Replication
-      G[Geo Sites]
-      H[CRDT Merge Layer]
-      G <--> H
-      H <--> F1
-      H <--> F2
-      H <--> F3
+    subgraph "CRDT Engine"
+      LWW[LWW Register]
+      GSET[G-Set]
+      COUNTER[PN-Counter]
     end
 
-    subgraph Observability
-      O1[Tracing]
-      O2[Metrics]
-      O3[Audit/Lineage Store]
+    subgraph "Security & Privacy"
+      RLS[Row-Level Security]
+      DP[Differential Privacy]
+      AUDIT[Audit Logger]
     end
 
-    B --> O1
-    E --> O1
-    E --> O2
-    P --> O3
+    GUI --> PARSE
+    CLI --> PARSE
+    SDK --> PARSE
+    PARSE --> OPT
+    OPT --> EXEC
+    EXEC --> MVCC
+    MVCC --> ULS
+    ULS --> IDX
+    EXEC --> RLS
+    EXEC --> DP
+    EXEC --> AUDIT
+    ULS --> LWW
+    ULS --> GSET
+    ULS --> COUNTER
     F1 --> O3
     F2 --> O3
     F3 --> O3
@@ -212,33 +201,53 @@ EXIT;
 
 ## Start with GUI
 
-You can also try LatticeDB with a simple GUI: (optional)
+LatticeDB includes a modern web-based GUI with powerful features:
 
-```angular2html
-# HOW TO RUN (server + GUI)
-# 1) Build the HTTP bridge:
-#    cmake -S . -B build && cmake --build build -j
-#    ./build/latticedb_server
-#
-# 2) Start the GUI:
-#    cd gui
-#    npm install
-#    npm run dev
-#
+### GUI Features
+- 🎨 **Dark/Light Mode**: Full theme support with persistent settings
+- 📝 **SQL Editor**: Monaco-based editor with syntax highlighting
+- 📊 **Results Visualization**: Tabular view with export capabilities
+- 🕐 **Query History**: Track and replay previous queries
+- ⭐ **Favorites**: Save frequently used queries
+- 🗂️ **Schema Browser**: Interactive database schema exploration
+- 🎯 **Mock Mode**: Try LatticeDB without running the server
+
+### Running the GUI
+
+```bash
+# 1) Build and start the HTTP server:
+cmake -S . -B build && cmake --build build -j
+./build/latticedb_server
+
+# 2) In a new terminal, start the GUI:
+cd gui
+npm install
+npm run dev
+
 # Open http://localhost:5173
-#
-# Example query:
-# CREATE TABLE people (id TEXT PRIMARY KEY, name TEXT MERGE lww, credits INT MERGE sum_bounded(0,1000000), profile_vec VECTOR<4>);
-# INSERT INTO people (id,name,credits,profile_vec) VALUES ('u1','Ada',10,[0.1,0.2,0.3,0.4]);
-# SELECT * FROM people;
 ```
 
-Then open your browser to [http://localhost:5173](http://localhost:5173). Feel free to modify and run the example queries above.
+### Mock Mode (No Server Required)
+The GUI can run standalone with sample data:
+```bash
+cd gui
+npm install
+npm run dev
+# Toggle "Mock Mode" in the UI to use sample data
+```
 
 _How the GUI looks..._
 
 <p align="center">
-  <img src="docs/GUI.png" alt="LatticeDB GUI Screenshot" width="100%"/>
+  <img src="docs/gui.png" alt="LatticeDB GUI Screenshot" width="100%"/>
+</p>
+
+<p align="center">
+  <img src="docs/gui-dark.png" alt="LatticeDB GUI Dark Mode Screenshot" width="100%"/>
+</p>
+
+<p align="center">
+  <img src="docs/settings.png" alt="LatticeDB GUI Schema Browser Screenshot" width="100%"/>
 </p>
 
 ## Core Concepts & Examples
@@ -250,11 +259,17 @@ _How the GUI looks..._
 
 ```mermaid
 stateDiagram-v2
-    [*] --> LocalDelta
-    LocalDelta --> ShipDelta: gossip/replicate
-    ShipDelta --> MergeQueue
-    MergeQueue --> Resolve: per-column policy
-    Resolve --> Apply
+    [*] --> LocalWrite: Write Operation
+    LocalWrite --> CRDTDelta: Generate Delta
+    CRDTDelta --> VectorClock: Update Clock
+    VectorClock --> Broadcast: Ship to Peers
+    Broadcast --> MergeResolve: Apply Policy
+    MergeResolve --> LWW: Last-Writer-Wins
+    MergeResolve --> Union: Set Union
+    MergeResolve --> Custom: Custom Resolver
+    LWW --> Apply: Persist
+    Union --> Apply: Persist
+    Custom --> Apply: Persist
     Apply --> [*]
 ```
 
@@ -276,14 +291,16 @@ ALTER TABLE tickets
 
 ```mermaid
 sequenceDiagram
-  participant Q as Query
-  participant I as Interval Rewriter
-  participant IX as Temporal Index
-  participant EX as Executor
-  Q->>I: FOR SYSTEM_TIME AS OF '2025-08-10T13:37Z'
-  I->>IX: tx/valid interval lookup
-  IX-->>EX: pruned candidate versions
-  EX-->>Q: results (snap consistent)
+    participant Q as Query
+    participant P as Parser
+    participant T as Temporal Rewriter
+    participant I as Temporal Index
+    participant E as Executor
+    Q->>P: FOR SYSTEM_TIME AS OF timestamp
+    P->>T: Extract temporal predicates
+    T->>I: CSN range lookup
+    I-->>E: Pruned row versions
+    E-->>Q: Snapshot-consistent results
 ```
 
 **Example**
@@ -306,13 +323,18 @@ SELECT lineage_explain(orders, 42, '2025-08-10T13:37:00Z');
 
 ```mermaid
 flowchart TD
-  U[User/Service] --> A[AuthN]
-  A --> Ctx[Security Context]
-  Ctx --> P[Policy Engine]
-  P -->|RLS/CLS| QP[Query Plan]
-  P -->|DP Budget| QP
-  QP --> EXE[Executor]
-  EXE --> AUD[Audit/Lineage Store]
+    U[User/Service] --> AUTH[Authentication]
+    AUTH --> CTX[Security Context]
+    CTX --> POL[Policy Engine]
+    POL --> RLS[Row-Level Security]
+    POL --> CLS[Column-Level Security]
+    POL --> DP[Differential Privacy]
+    RLS --> PLAN[Query Plan]
+    CLS --> PLAN
+    DP --> BUDGET[Epsilon Budget]
+    BUDGET --> PLAN
+    PLAN --> EXEC[Executor]
+    EXEC --> AUDIT[Audit Logger]
 ```
 
 **Example**
@@ -354,12 +376,25 @@ WHERE o.status = 'open';
 
 ```mermaid
 flowchart LR
-  SRC[CDC/Kafka] --> PARSE[Decoder]
-  PARSE --> WTR[Watermark & Windows]
-  WTR --> AGG[Incremental Aggregates]
-  AGG --> SNAP[State Store]
-  SNAP --> EMIT[Emitter]
-  EMIT --> MV[Materialized View]
+    subgraph Sources
+        CDC[Table CDC]
+        KAFKA[Kafka Stream]
+    end
+    subgraph Processing
+        DECODE[Decoder]
+        WINDOW[Window Assignment]
+        AGG[Incremental Aggregation]
+    end
+    subgraph Output
+        STATE[State Store]
+        MV[Materialized View]
+    end
+    CDC --> DECODE
+    KAFKA --> DECODE
+    DECODE --> WINDOW
+    WINDOW --> AGG
+    AGG --> STATE
+    STATE --> MV
 ```
 
 **Example**
@@ -386,15 +421,25 @@ LatticeDB uses a **Unified Log-Structured Storage (ULS)**:
 
 ```mermaid
 flowchart LR
-    subgraph ULS["ULS Segment"]
-        RP[Row Pages] --- CP[Column Projections]
-        RP --- IDX[Index Blocks]
-        RP --- META[Provenance/Temporal Footers]
+    subgraph "Storage Engine"
+        WAL[Write-Ahead Log]
+        MEM[MemTable]
+        L0[L0 SSTables]
+        L1[L1 SSTables]
+        L2[L2 SSTables]
     end
-
-    WAL[Write-Ahead Log] --> RP
-    COMPACTOR --> RP
-    CRDT[CRDT Delta Files] --> COMPACTOR
+    subgraph "Indexes"
+        BT[B+ Tree]
+        VEC[Vector HNSW]
+        BLOOM[Bloom Filter]
+    end
+    WAL --> MEM
+    MEM --> L0
+    L0 --> L1
+    L1 --> L2
+    L0 --> BT
+    L0 --> VEC
+    L0 --> BLOOM
 ```
 
 **Transactions & Consistency**
@@ -406,20 +451,23 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant B as Coordinator
-    participant R as QoS Admission
+    participant P as Parser
+    participant O as Optimizer
     participant E as Executor
+    participant M as MVCC
     participant S as Storage
-    participant L as Log
-    C->>B: BEGIN and build plan
-    B->>R: classify(workload)
-    R-->>B: slot/grant
-    B->>E: dispatch(plan, snapshot_ts)
-    E->>S: MVCC read/write intents
-    S->>L: WAL append
-    L-->>S: fsync ack
-    S-->>E: commit apply
-    E-->>C: COMMIT ok(txid)
+    participant A as Audit
+
+    C->>P: SQL Query
+    P->>O: AST + Policies
+    O->>E: Physical Plan
+    E->>M: Begin TX (CSN)
+    M->>S: Read/Write at CSN
+    S->>S: Apply CRDT Merge
+    S-->>M: Result Set
+    M-->>E: Versioned Data
+    E->>A: Log Access
+    E-->>C: COMMIT (txid)
 ```
 
 ## SQL: LatticeSQL Extensions
@@ -453,10 +501,41 @@ flowchart TD
   ADM --> RUN[Executors]
 ```
 
+## Implementation Status
+
+### Core Components
+- ✅ **SQL Parser**: Full recursive descent parser with LatticeSQL extensions
+- ✅ **Storage Engine**: Page-based disk manager with buffer pool management
+- ✅ **Index Structures**: B+ tree implementation with iterator support
+- ✅ **Query Processing**: Query planner and executor framework
+- ✅ **Type System**: Support for basic types, vectors, sets, and CRDTs
+- ✅ **Transaction Management**: MVCC foundation with isolation levels
+- ✅ **REPL Interface**: Interactive command-line shell (288 lines)
+- ✅ **HTTP Server**: REST API bridge for web clients (118 lines)
+- ✅ **Web GUI**: Modern React/TypeScript interface with Monaco editor
+
+### Test Coverage
+Our comprehensive test suite includes:
+- **Temporal Operations**: Time-travel queries, bitemporal support
+- **CRDT Merging**: LWW, G-Set, counters, bounded sums
+- **Vector Search**: Distance queries, similarity operations
+- **Differential Privacy**: DP aggregates with epsilon budgets
+- **Transactions**: ACID properties, isolation levels, savepoints
+- **Complex Joins**: All join types, multi-table operations
+- **Schema Evolution**: Online DDL, constraints, computed columns
+- **Streaming**: Materialized views, windowing functions
+- **Security**: Row/column-level security, audit logging
+
+Run tests with:
+```bash
+cd tests
+./run_all.sh
+```
+
 ## Roadmap
 
-* **Phase 1**: MVCC, ULS storage, temporal/lineage, RLS/CLS, streaming MVs.
-* **Phase 2**: MRT CRDT layer + geo multi-master, DP framework, vector indexes.
+* **Phase 1** ✅: MVCC, ULS storage, temporal/lineage, RLS/CLS, streaming MVs.
+* **Phase 2** 🚧: MRT CRDT layer + geo multi-master, DP framework, vector indexes.
 * **Phase 3**: TEE policy execution, learned index plugin GA, advanced QoS.
 
 ## Limitations
@@ -509,43 +588,48 @@ erDiagram
     TABLE ||--o{ ROW_VERSION : has
     POLICY ||--o{ POLICY_BINDING : applies_to
     ROW_VERSION }o--|| LINEAGE_EVENT : derived_from
-    "USER" ||--o{ QUERY_SESSION : initiates
+    USER ||--o{ QUERY_SESSION : initiates
     QUERY_SESSION ||--o{ AUDIT_LOG : writes
+    TABLE ||--o{ INDEX : has
+    TABLE ||--o{ MATERIALIZED_VIEW : source
 
     TABLE {
         uuid table_id PK
         string name
         json schema_versions
         json merge_policy
+        string crdt_type
+        interval retention_period
     }
     ROW_VERSION {
         uuid row_id
         uuid table_id FK
-        timestamptz tx_from
-        timestamptz tx_to
+        bigint csn_min
+        bigint csn_max
         timestamptz valid_from
         timestamptz valid_to
         jsonB data
         jsonB provenance
+        vector_clock merge_clock
     }
     POLICY {
         uuid policy_id PK
         string name
-        string type
+        string type "RLS|CLS|DP|MASK"
         json spec
+        float epsilon_budget
     }
-    POLICY_BINDING {
-        uuid binding_id PK
-        uuid policy_id FK
+    INDEX {
+        uuid index_id PK
         uuid table_id FK
-        string scope
+        string type "BTREE|HNSW|BITMAP|BLOOM"
+        json config
     }
-    LINEAGE_EVENT {
-        uuid event_id PK
-        uuid row_id FK
-        string op
-        json details
-        timestamptz at
+    MATERIALIZED_VIEW {
+        uuid view_id PK
+        string name
+        string refresh_type
+        interval refresh_interval
     }
 ```
 

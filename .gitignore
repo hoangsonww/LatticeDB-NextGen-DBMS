@@ -18,3 +18,4 @@ Thumbs.db
 # Tooling
 .ccache/
 .cache/
+/gui/node_modules/
