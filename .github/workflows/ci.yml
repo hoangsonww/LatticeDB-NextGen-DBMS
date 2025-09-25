@@ -1,4 +1,4 @@
-name: Devcontainer CI
+name: CI/CD Pipeline for LatticeDB DBMS
 
 on:
   push:
@@ -46,11 +46,11 @@ jobs:
           run_cmd shell_harness bash tests/run_all.sh
 
           cat > "$RUNNER_TEMP/smoke.sql" <<'SQL'
-CREATE TABLE t (id TEXT PRIMARY KEY, v INT);
-INSERT INTO t (id, v) VALUES ('a', 1);
-SELECT id, v FROM t;
-EXIT;
-SQL
+          CREATE TABLE t (id TEXT PRIMARY KEY, v INT);
+          INSERT INTO t (id, v) VALUES ('a', 1);
+          SELECT id, v FROM t;
+          EXIT;
+          SQL
           run_cmd smoke bash -lc "build/latticedb < \"$RUNNER_TEMP/smoke.sql\""
 
           tar -czf "$ARTIFACT_DIR/latticedb-build.tar.gz" -C build . >"$LOG_DIR/package.log" 2>&1
