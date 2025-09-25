@@ -52,6 +52,7 @@
   - [GUI Features](#gui-features)
   - [Running the GUI](#running-the-gui)
   - [Mock Mode (No Server Required)](#mock-mode-no-server-required)
+- [Zipping the DBMS](#zipping-the-dbms)
 - [Core Concepts & Examples](#core-concepts--examples)
   - [Mergeable Relational Tables (MRT)](#mergeable-relational-tables-mrt)
   - [Bitemporal Time Travel & Lineage](#bitemporal-time-travel--lineage)
@@ -342,6 +343,20 @@ _How the GUI looks..._
 <p align="center">
   <img src="docs/settings.png" alt="LatticeDB GUI Schema Browser Screenshot" width="100%"/>
 </p>
+
+## Zipping the DBMS
+
+To create a distributable package of the built binaries and necessary files:
+
+```bash
+cd build # or build-container if using DevContainer
+cmake -E tar cf ../latticedb-build.zip --format=zip .
+```
+
+This will create `latticedb-build.zip` in the parent directory, containing all compiled binaries and resources needed to run LatticeDB on another compatible system. You can then unzip and run the server or CLI directly.
+
+> [!TIP]
+> Instead of manually zipping the DBMS, you can visit [Releases](https://github.com/hoangsonww/LatticeDB-NextGen-DBMS/releases/) to download pre-packaged binaries/ZIPs for your platform.
 
 ## Core Concepts & Examples
 

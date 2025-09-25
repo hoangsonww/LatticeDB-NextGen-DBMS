@@ -1,38 +1,89 @@
-name: CI
+name: Devcontainer CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
-  build-and-test:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+  devcontainer-build:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Install dependencies (Linux)
-        if: startsWith(runner.os, 'Linux')
+      - name: Setup And Build Devcontainer Environment
+        id: devcontainer
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake g++ ninja-build ccache
+          set +e
+          SUMMARY_FILE="$RUNNER_TEMP/summary.env"
+          LOG_DIR="$RUNNER_TEMP/logs"
+          ARTIFACT_DIR="$RUNNER_TEMP/artifacts"
+          mkdir -p "$LOG_DIR" "$ARTIFACT_DIR"
+          : > "$SUMMARY_FILE"
 
-      - name: Install dependencies (macOS)
-        if: startsWith(runner.os, 'macOS')
+          run_cmd() {
+            local label="$1"
+            shift
+            local logfile="$LOG_DIR/${label}.log"
+            "$@" >"$logfile" 2>&1
+            local status=$?
+            echo "${label}_status=${status}" >> "$SUMMARY_FILE"
+          }
+
+          export DEBIAN_FRONTEND=noninteractive
+          run_cmd dependencies sudo apt-get update
+          run_cmd packages sudo apt-get install -y cmake g++ ninja-build ccache clang-format zip
+
+          run_cmd configure cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          run_cmd build cmake --build build -j
+          run_cmd format cmake --build build --target format
+          run_cmd rebuild cmake --build build -j
+          run_cmd ctest ctest --test-dir build -j 4 --output-on-failure
+          run_cmd shell_harness bash tests/run_all.sh
+
+          cat > "$RUNNER_TEMP/smoke.sql" <<'SQL'
+CREATE TABLE t (id TEXT PRIMARY KEY, v INT);
+INSERT INTO t (id, v) VALUES ('a', 1);
+SELECT id, v FROM t;
+EXIT;
+SQL
+          run_cmd smoke bash -lc "build/latticedb < \"$RUNNER_TEMP/smoke.sql\""
+
+          tar -czf "$ARTIFACT_DIR/latticedb-build.tar.gz" -C build . >"$LOG_DIR/package.log" 2>&1
+          echo "package_status=$?" >> "$SUMMARY_FILE"
+
+          echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
+          echo "artifact_path=$ARTIFACT_DIR/latticedb-build.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: latticedb-build
+          path: ${{ steps.devcontainer.outputs.artifact_path }}
+          if-no-files-found: ignore
+
+      - name: Publish Job Summary
+        if: always()
+        shell: bash
         run: |
-          brew update
-          brew install cmake ninja ccache
-
-      - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
-      - name: Build
-        run: cmake --build build -j
-
-      - name: Smoke test
-        run: |
-          ./build/latticedb < tests/smoke.sql
+          SUMMARY_FILE="${{ steps.devcontainer.outputs.summary_file }}"
+          {
+            echo "## Devcontainer Build Summary"
+            if [ -f "$SUMMARY_FILE" ]; then
+              while IFS='=' read -r key value; do
+                [ -n "$key" ] || continue
+                label="${key%_status}"
+                if [ "$value" -eq 0 ] 2>/dev/null; then
+                  echo "- [x] ${label}"
+                else
+                  echo "- [ ] ${label} (exit ${value})"
+                fi
+              done < "$SUMMARY_FILE"
+            else
+              echo "- [ ] summary_data_missing"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
