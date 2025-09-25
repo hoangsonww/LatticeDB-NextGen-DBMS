@@ -1,9 +1,9 @@
-# LatticeDB - The Next-Gen, Mergeable Temporal Relational Database 🗂️
+# LatticeDB - Modern Production-Ready Relational Database Management System 🚀
 
-*A next-generation, mergeable, temporal, policy-aware relational DBMS with a built-in GUI.*
+*A feature-complete, high-performance RDBMS with native AI/ML support, time-travel queries, streaming statistics, built-in GUI, and enterprise security.*
 
 > [!IMPORTANT]
-> **Mission**: Make conflict-free multi-master, time-travel, privacy-preserving analytics, streaming, and vector search **first-class** in a relational DB—without bolted-on sidecars.
+> **Mission**: Deliver a modern database that seamlessly integrates traditional RDBMS capabilities with cutting-edge features like vector search, temporal queries, adaptive compression, and comprehensive security - all in a single, cohesive system.
 
 <p align="center">
   <img src="docs/logo.png" alt="LatticeDB Logo" width="50%"/>
@@ -43,7 +43,15 @@
 - [Feature Matrix & How It’s Different](#feature-matrix--how-its-different)
 - [Architecture Overview](#architecture-overview)
 - [Quick Start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [Build from Source](#build-from-source)
+  - [Hello World - Working Examples](#hello-world---working-examples)
+  - [DevContainer (VS Code)](#devcontainer-vs-code)
+  - [Command-Line Interface (CLI)](#command-line-interface-cli)
 - [Start with GUI](#start-with-gui)
+  - [GUI Features](#gui-features)
+  - [Running the GUI](#running-the-gui)
+  - [Mock Mode (No Server Required)](#mock-mode-no-server-required)
 - [Core Concepts & Examples](#core-concepts--examples)
   - [Mergeable Relational Tables (MRT)](#mergeable-relational-tables-mrt)
   - [Bitemporal Time Travel & Lineage](#bitemporal-time-travel--lineage)
@@ -53,42 +61,59 @@
 - [Storage, Transactions & Replication](#storage-transactions--replication)
 - [SQL: LatticeSQL Extensions](#sql-latticesql-extensions)
 - [Operations & Observability](#operations--observability)
+- [Implementation Status](#implementation-status)
+  - [Core Components](#core-components)
+  - [Test Coverage](#test-coverage)
 - [Roadmap](#roadmap)
 - [Limitations](#limitations)
 - [Contributing](#contributing)
 - [License](#license)
+- [Appendix: Glossary](#appendix-glossary)
+  - [Bonus: ER Model for Governance & Provenance](#bonus-er-model-for-governance--provenance)
+  - [Why LatticeDB vs. “Big Three”](#why-latticedb-vs-big-three)
 
 ## Why LatticeDB
 
-LatticeDB is designed from the ground up to make **conflict-free multi-master**, **bitemporal**, **policy-aware**, **privacy-preserving**, **real-time analytics**, **streaming**, and **vector search** first-class citizens in a relational database—without bolting on sidecars, plugins, or external services.
+LatticeDB is a **production-ready RDBMS** built from scratch in modern C++17, combining traditional database capabilities with cutting-edge features:
 
-1. **Mergeable Relational Tables (MRT)**: Per-column **CRDT** semantics for conflict-free **active-active** replication and **offline-first** applications. Choose `lww`, `sum_bounded`, `gset`, or custom resolvers.
-2. **Bitemporal by default**: Every row has **transaction time** *and* **valid time** plus provenance—no retrofitting needed. Query **as of** a timestamp and ask *why* with lineage.
-3. **Policy-as-data**: Row/column masking, role attributes, retention, and **differential privacy** budgets are declared and versioned in the catalog, enforced **inside** the engine.
-4. **Unified storage surfaces**: OLTP row pages, OLAP columnar projections, **stream tails**, and **vector indexes** co-exist and are chosen by the optimizer.
-5. **WASM extensibility**: Deterministic, capability-scoped WebAssembly UDF/UDTF/UDA, custom codecs, and merge resolvers with fuel/memory limits.
-6. **Hybrid concurrency**: MVCC by default; **deterministic lane** for hot-key contention; optional **causal+ snapshots** with bounded staleness hints per query.
-7. **Zero-downtime schema evolution**: Versioned schemas, online backfills, and cross-version query rewrite.
-8. **Streaming MVs**: Exactly-once, incremental materialized views that can consume internal CDC or external logs.
+1. **Complete SQL Support**: Full SQL parser with DDL, DML, DCL, TCL - **JOINs (INNER, LEFT, RIGHT)**, **GROUP BY**, **aggregates (COUNT, SUM, AVG, MIN, MAX)**, subqueries, and CTEs all **fully implemented**.
+2. **Time Travel Queries**: Built-in temporal support with `FOR SYSTEM_TIME AS OF TX n` syntax for querying historical data.
+3. **Native Vector Search**: **Fully implemented** vector engine with multiple algorithms (Flat, HNSW, IVF) and distance metrics (L2, Cosine, Dot Product, Manhattan) for AI/ML workloads.
+4. **Enterprise Security**: **Complete implementation** of row-level security, column encryption, authentication (password, JWT, certificates), and comprehensive audit logging.
+5. **Advanced Storage**: **Professional buffer pool manager** with LRU/Clock replacement, **B+ Tree indexes**, **Write-Ahead Logging (WAL)**, ARIES recovery, and checkpoint mechanisms.
+6. **ACID Transactions**: **Full MVCC implementation** with multiple isolation levels, 2PL protocol, deadlock detection, and savepoints.
+7. **Adaptive Compression**: **Working compression engine** with RLE, Dictionary, Delta, Bit-packing, LZ4, and ZSTD algorithms.
+8. **Stream Processing**: Real-time continuous queries with windowing functions for streaming analytics.
+
+These features are designed to work **seamlessly together** in a single, unified engine—unlike many incumbents that require extensions, plugins, or external services to achieve similar functionality.
 
 ## Feature Matrix & How It’s Different
 
 LatticeDB focuses on features that major RDBMS generally **don’t provide natively out-of-the-box all together**:
 
-| Capability                                                  | LatticeDB               |                       Typical in PostgreSQL |                   Typical in MySQL |                                                 Typical in SQL Server |
-| ----------------------------------------------------------- | ----------------------- | ------------------------------------------: | ---------------------------------: | --------------------------------------------------------------------: |
-| **Mergeable tables (CRDTs) for conflict-free multi-master** | **Built-in** per column |           Via external systems/custom logic |  Via external systems/custom logic |                                     Via external systems/custom logic |
-| **Bitemporal (valid + transaction time) by default**        | **Built-in**            |              Emulatable via schema/patterns |     Emulatable via schema/patterns | System-versioned temporal tables exist; **valid-time** needs modeling |
-| **Policy-as-data (RLS/CLS/DP budgets) in engine**           | **Built-in**            |  RLS exists; DP requires extensions/tooling | RLS via views/plugins; DP external |                                               RLS exists; DP external |
-| **Vector search integrated**                                | **Built-in**            |                     Commonly via extensions |      Commonly via plugins/editions |                                             Varies by edition/service |
-| **WASM UDF sandbox**                                        | **Built-in**            | Not built-in (extensions/native C required) |                       Not built-in |                                                          Not built-in |
-| **Exactly-once streaming MVs**                              | **Built-in**            |               Logical decoding + extensions |          Binlog + external engines |                                                CDC + external engines |
-| **Offline-first & causal+ snapshots**                       | **Built-in**            |          External tooling/replication modes |                   External tooling |                                                      External tooling |
+| Capability                                    | LatticeDB               | PostgreSQL         | MySQL       | SQL Server             |
+|-----------------------------------------------|-------------------------|--------------------|-------------|------------------------|
+| **Full SQL with JOINs, GROUP BY, Aggregates** | ✅ **Fully Implemented** | ✅ Built-in         | ✅ Built-in  | ✅ Built-in             |
+| **Time Travel Queries (FOR SYSTEM_TIME)**     | ✅ **Fully Implemented** | Via extensions     | Limited     | Temporal tables        |
+| **Native Vector Search (AI/ML)**              | ✅ **Fully Implemented** | pgvector extension | Via plugins | Limited                |
+| **Row-Level Security**                        | ✅ **Fully Implemented** | ✅ Built-in         | Via views   | ✅ Built-in             |
+| **Column Encryption**                         | ✅ **Fully Implemented** | Via extensions     | TDE only    | TDE + Always Encrypted |
+| **Adaptive Compression**                      | ✅ **Fully Implemented** | Basic support      | Basic       | Advanced               |
+| **Stream Processing**                         | ✅ **Fully Implemented** | Via extensions     | Via binlog  | CDC                    |
+| **ACID with MVCC**                            | ✅ **Fully Implemented** | ✅ Built-in         | ✅ InnoDB    | ✅ Built-in             |
+| **Write-Ahead Logging**                       | ✅ **Fully Implemented** | ✅ Built-in         | ✅ Built-in  | ✅ Built-in             |
+| **B+ Tree Indexes**                           | ✅ **Fully Implemented** | ✅ Built-in         | ✅ Built-in  | ✅ Built-in             |
+| **Comprehensive Audit Logging**               | ✅ **Fully Implemented** | Via extensions     | Limited     | ✅ Built-in             |
+| **Custom Merge Policies (CRDTs)**             | ✅ **Fully Implemented** | Third-party        | Third-party | Third-party            |
+| **Vector Search with Multiple Algorithms**    | ✅ **Fully Implemented** | pgvector extension | Via plugins | Limited                |
+| **Built-in Web GUI**                          | ✅ **Fully Implemented** | Third-party        | Third-party | Third-party            |
 
 > [!IMPORTANT]
 > *Notes*: These comparisons refer to **native**, unified features in a single engine. Many incumbents can achieve parts of this via **extensions**, **editions**, or **external services**, but not as a cohesive, first-class design as in LatticeDB.
 
 ## Architecture Overview
+
+The architecture is modular, with clear separation of concerns:
 
 ```mermaid
 flowchart TD
@@ -149,54 +174,117 @@ flowchart TD
 * CMake ≥ 3.15
 * Linux/macOS/WSL2 (for now)
 * Optional: Python 3.x to run simple workload scripts
+* Recommended: VS Code with Dev Containers for easy setup
 
 ### Build from Source
 
+This requires you to have the prerequisites installed. Then:
+
 ```bash
-git clone https://example.com/latticedb.git
-cd latticedb
-cmake -S . -B build
-cmake --build build -j
-./build/latticedb  # launches a simple REPL
+git clone https://github.com/hoangsonww/LatticeDB-NextGen-DBMS.git
+cd LatticeDB-NextGen-DBMS
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
+./latticedb  # launches CLI interface
 ```
 
-### Hello World (REPL)
+### DevContainer (VS Code)
+
+You do not need to install any dependencies locally. Just:
+
+1. Install [VS Code](https://code.visualstudio.com/) and the [Remote - Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
+2. Open the project folder in VS Code.
+3. When prompted, reopen in the container.
+4. Run (in a terminal inside the container):
+
+   ```bash
+   cmake -S . -B build-container -DCMAKE_BUILD_TYPE=Release -G Ninja
+   cmake --build build-container --parallel
+   ./build-container/latticedb --version
+   ```
+
+Upon complete, the DBMS should look like this:
+
+<p align="center">
+  <img src="docs/repl.png" alt="LatticeDB REPL Screenshot" width="100%"/>
+</p>
+
+### Hello World - Working Examples
 
 ```sql
--- Create a mergeable, bitemporal table with vectors
-CREATE TABLE people (
-  id TEXT PRIMARY KEY,
-  name TEXT MERGE lww,
-  tags SET<TEXT> MERGE gset,
-  credits INT MERGE sum_bounded(0, 1000000),
-  profile_vec VECTOR<4>
+-- Create tables with various data types
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO people (id, name, tags, credits, profile_vec) VALUES
-('u1','Ada', {'engineer','math'}, 10, [0.1,0.2,0.3,0.4]),
-('u2','Grace', {'engineer'}, 20, [0.4,0.3,0.2,0.1]);
+CREATE TABLE orders (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER,
+  amount DOUBLE,
+  status VARCHAR(20)
+);
 
--- Conflict-free merge on upsert
-INSERT INTO people (id, credits, tags, name) VALUES
-('u1', 15, {'leader'}, 'Ada Lovelace') ON CONFLICT MERGE;
+-- Insert data
+INSERT INTO users (id, name, email) VALUES
+  (1, 'Alice Johnson', 'alice@example.com'),
+  (2, 'Bob Smith', 'bob@example.com');
 
--- Time travel (transaction time)
-SELECT * FROM people FOR SYSTEM_TIME AS OF TX 1;
+INSERT INTO orders VALUES
+  (1, 1, 99.99, 'completed'),
+  (2, 1, 149.50, 'pending'),
+  (3, 2, 75.00, 'completed');
 
--- Vector similarity filter (brute-force demo)
-SELECT id, name FROM people
-WHERE DISTANCE(profile_vec, [0.1,0.2,0.29,0.41]) < 0.1;
+-- JOIN queries (fully working)
+SELECT u.name, COUNT(o.id) as order_count, SUM(o.amount) as total
+FROM users u
+INNER JOIN orders o ON u.id = o.user_id
+GROUP BY u.id, u.name;
 
--- Differential privacy (noisy aggregates)
-SET DP_EPSILON = 0.4;
-SELECT DP_COUNT(*) FROM people WHERE credits >= 10;
+-- Aggregates (all working)
+SELECT status,
+       COUNT(*) as count,
+       SUM(amount) as total,
+       AVG(amount) as average,
+       MIN(amount) as minimum,
+       MAX(amount) as maximum
+FROM orders
+GROUP BY status;
 
-SAVE DATABASE 'snapshot.ldb';
+-- Time travel query
+SELECT * FROM orders FOR SYSTEM_TIME AS OF TX 5;
+
+-- Vector search (if table has vector column)
+CREATE TABLE embeddings (
+  id INTEGER PRIMARY KEY,
+  content TEXT,
+  vector VECTOR(768)
+);
+
+-- Transaction example
+BEGIN;
+UPDATE orders SET status = 'shipped' WHERE id = 2;
+INSERT INTO orders VALUES (4, 2, 199.99, 'pending');
+COMMIT;
+
 EXIT;
 ```
 
 > [!NOTE]
 > The REPL demonstrates the core LatticeDB concepts end-to-end in a single process. For distributed mode, use the coordinator + shard binaries (see `/cmd`).
+
+### Command-Line Interface (CLI)
+
+The CLI provides an interactive shell to run SQL commands:
+
+```bash
+./latticedb
+```
+
+Type `help` for a list of commands.
 
 ## Start with GUI
 
@@ -226,8 +314,14 @@ npm run dev
 # Open http://localhost:5173
 ```
 
+Ensure your server is running before using the GUI:
+
+<p align="center">
+  <img src="docs/server.png" alt="LatticeDB Server Screenshot" width="100%"/>
+</p>
+
 ### Mock Mode (No Server Required)
-The GUI can run standalone with sample data:
+The GUI can run standalone with sample data, just in case you don’t want to start the server:
 ```bash
 cd gui
 npm install
@@ -555,23 +649,12 @@ We ❤️ contributions! Ways to help:
 * Extend the optimizer (cardinality models, join ordering, vector pushdowns).
 * Improve docs—especially temporal/lineage tutorials.
 
-**Dev setup**
-
-```bash
-git clone https://example.com/latticedb.git
-cd latticedb
-cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug
-cmake --build build/debug -j
-ctest --test-dir build/debug  # if tests are present
-```
-
-Please run `clang-format` (or `scripts/format.sh`) before submitting PRs.
+> [!NOTE]
+> Please run `clang-format` with `cmake --build build-container --target format` before submitting PRs!
 
 ## License
 
 Unless stated otherwise in the repository, LatticeDB is released under the **MIT License**. See `LICENSE` for details.
-
----
 
 ## Appendix: Glossary
 
@@ -634,7 +717,8 @@ erDiagram
 
 ### Why LatticeDB vs. “Big Three”
 
-LatticeDB **natively** combines **CRDT mergeability**, **bitemporal & lineage**, **policy-as-data with differential privacy**, **streaming MVs**, **vector search**, and **WASM extensibility** into the **core** engine—so you can build **offline-tolerant, audited, privacy-preserving, real-time** apps **without stitching together** sidecars, plugins, and external services.
+> [!IMPORTANT]
+> LatticeDB **natively** combines **CRDT mergeability**, **bitemporal & lineage**, **policy-as-data with differential privacy**, **streaming MVs**, **vector search**, and **WASM extensibility** into the **core** engine—so you can build **offline-tolerant, audited, privacy-preserving, real-time** apps **without stitching together** sidecars, plugins, and external services.
 
 --- 
 
