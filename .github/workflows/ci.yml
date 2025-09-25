@@ -7,72 +7,77 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+# Cancel in-progress runs of the same ref (PR) to save minutes
+concurrency:
+  group: latticedb-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CMAKE_BUILD_TYPE: RelWithDebInfo
+  CCACHE_DIR: ${{ runner.tool_cache }}/ccache
+  CCACHE_MAXSIZE: 1G
+
 jobs:
-  devcontainer-build:
+  lint:
+    name: "🧹 Lint & Format"
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup And Build Devcontainer Environment
-        id: devcontainer
+      - name: Install Tooling
+        run: |
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -yq cmake ninja-build clang-format g++
+
+      - name: Run Lint/Format Target (streamed)
+        id: lint
         shell: bash
         run: |
           set +e
           SUMMARY_FILE="$RUNNER_TEMP/summary.env"
           LOG_DIR="$RUNNER_TEMP/logs"
-          ARTIFACT_DIR="$RUNNER_TEMP/artifacts"
-          mkdir -p "$LOG_DIR" "$ARTIFACT_DIR"
+          mkdir -p "$LOG_DIR"
           : > "$SUMMARY_FILE"
 
           run_cmd() {
-            local label="$1"
-            shift
+            local label="$1"; shift
             local logfile="$LOG_DIR/${label}.log"
-            "$@" >"$logfile" 2>&1
-            local status=$?
+            echo "::group::${label}"
+            echo "[$(date -u +%FT%TZ)] START ${label}"
+            set -o pipefail
+            stdbuf -oL -eL "$@" |& tee "$logfile"
+            local status=${PIPESTATUS[0]}
             echo "${label}_status=${status}" >> "$SUMMARY_FILE"
+            echo "[$(date -u +%FT%TZ)] END ${label} (exit ${status})"
+            echo "::endgroup::"
+            return $status
           }
 
-          export DEBIAN_FRONTEND=noninteractive
-          run_cmd dependencies sudo apt-get update
-          run_cmd packages sudo apt-get install -y cmake g++ ninja-build ccache clang-format zip
-
-          run_cmd configure cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          run_cmd build cmake --build build -j
-          run_cmd format cmake --build build --target format
-          run_cmd rebuild cmake --build build -j
-          run_cmd ctest ctest --test-dir build -j 4 --output-on-failure
-          run_cmd shell_harness bash tests/run_all.sh
-
-          cat > "$RUNNER_TEMP/smoke.sql" <<'SQL'
-          CREATE TABLE t (id TEXT PRIMARY KEY, v INT);
-          INSERT INTO t (id, v) VALUES ('a', 1);
-          SELECT id, v FROM t;
-          EXIT;
-          SQL
-          run_cmd smoke bash -lc "build/latticedb < \"$RUNNER_TEMP/smoke.sql\""
-
-          tar -czf "$ARTIFACT_DIR/latticedb-build.tar.gz" -C build . >"$LOG_DIR/package.log" 2>&1
-          echo "package_status=$?" >> "$SUMMARY_FILE"
+          run_cmd configure cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
+          run_cmd format    cmake --build build --target format
 
           echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
-          echo "artifact_path=$ARTIFACT_DIR/latticedb-build.tar.gz" >> "$GITHUB_OUTPUT"
 
-      - name: Upload Build Artifact
+      - name: Upload Lint Logs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: latticedb-build
-          path: ${{ steps.devcontainer.outputs.artifact_path }}
-          if-no-files-found: ignore
+          name: lint-logs
+          path: ${{ runner.temp }}/logs
+          if-no-files-found: warn
 
-      - name: Publish Job Summary
+      - name: Publish Lint Summary
         if: always()
         shell: bash
         run: |
-          SUMMARY_FILE="${{ steps.devcontainer.outputs.summary_file }}"
+          SUMMARY_FILE="${{ steps.lint.outputs.summary_file }}"
           {
-            echo "## Devcontainer Build Summary"
+            echo "## Lint & Format Summary"
             if [ -f "$SUMMARY_FILE" ]; then
               while IFS='=' read -r key value; do
                 [ -n "$key" ] || continue
@@ -87,3 +92,323 @@ jobs:
               echo "- [ ] summary_data_missing"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    name: "🏗️ Build"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [lint]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Toolchain
+        run: |
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -yq cmake g++ ninja-build ccache zip
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+
+      - name: Configure & Build (streamed)
+        id: build
+        shell: bash
+        run: |
+          set +e
+          SUMMARY_FILE="$RUNNER_TEMP/summary.env"
+          LOG_DIR="$RUNNER_TEMP/logs"
+          ARTIFACT_DIR="$RUNNER_TEMP/artifacts"
+          mkdir -p "$LOG_DIR" "$ARTIFACT_DIR" "${CCACHE_DIR}"
+          : > "$SUMMARY_FILE"
+
+          run_cmd() {
+            local label="$1"; shift
+            local logfile="$LOG_DIR/${label}.log"
+            echo "::group::${label}"
+            echo "[$(date -u +%FT%TZ)] START ${label}"
+            set -o pipefail
+            stdbuf -oL -eL "$@" |& tee "$logfile"
+            local status=${PIPESTATUS[0]}
+            echo "${label}_status=${status}" >> "$SUMMARY_FILE"
+            echo "[$(date -u +%FT%TZ)] END ${label} (exit ${status})"
+            echo "::endgroup::"
+            return $status
+          }
+
+          export DEBIAN_FRONTEND=noninteractive
+          run_cmd dependencies sudo apt-get update -o Acquire::Retries=3
+          run_cmd packages     sudo apt-get install -yq cmake g++ ninja-build ccache zip
+
+          run_cmd configure cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          run_cmd build     cmake --build build -j
+
+          # Save build dir as tarball artifact
+          run_cmd package bash -lc 'tar -czf "$RUNNER_TEMP/artifacts/latticedb-build.tar.gz" -C build .'
+
+          echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
+          echo "artifact_path=$ARTIFACT_DIR/latticedb-build.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: latticedb-build
+          path: ${{ steps.build.outputs.artifact_path }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Build Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: ${{ runner.temp }}/logs
+          if-no-files-found: warn
+
+      - name: Publish Build Summary
+        if: always()
+        shell: bash
+        run: |
+          SUMMARY_FILE="${{ steps.build.outputs.summary_file }}"
+          {
+            echo "## Build Summary"
+            if [ -f "$SUMMARY_FILE" ]; then
+              while IFS='=' read -r key value; do
+                [ -n "$key" ] || continue
+                label="${key%_status}"
+                if [ "$value" -eq 0 ] 2>/dev/null; then
+                  echo "- [x] ${label}"
+                else
+                  echo "- [ ] ${label} (exit ${value})"
+                fi
+              done < "$SUMMARY_FILE"
+            else
+              echo "- [ ] summary_data_missing"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  tests:
+    name: "🧪 Unit Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Test Dependencies
+        run: |
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -yq cmake
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: latticedb-build
+          path: ${{ runner.temp }}/build-art
+
+      - name: Extract Build
+        run: |
+          mkdir -p build
+          tar -xzf "${RUNNER_TEMP}/build-art/latticedb-build.tar.gz" -C build
+
+      - name: Run CTest (streamed)
+        id: unit
+        shell: bash
+        run: |
+          set +e
+          SUMMARY_FILE="$RUNNER_TEMP/summary.env"
+          LOG_DIR="$RUNNER_TEMP/logs"
+          mkdir -p "$LOG_DIR"
+          : > "$SUMMARY_FILE"
+
+          run_cmd() {
+            local label="$1"; shift
+            local logfile="$LOG_DIR/${label}.log"
+            echo "::group::${label}"
+            echo "[$(date -u +%FT%TZ)] START ${label}"
+            set -o pipefail
+            stdbuf -oL -eL "$@" |& tee "$logfile"
+            local status=${PIPESTATUS[0]}
+            echo "${label}_status=${status}" >> "$SUMMARY_FILE"
+            echo "[$(date -u +%FT%TZ)] END ${label} (exit ${status})"
+            echo "::endgroup::"
+            return $status
+          }
+
+          run_cmd ctest ctest --test-dir build -j 4 --output-on-failure
+
+          echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Test Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: ${{ runner.temp }}/logs
+          if-no-files-found: warn
+
+      - name: Publish Test Summary
+        if: always()
+        shell: bash
+        run: |
+          SUMMARY_FILE="${{ steps.unit.outputs.summary_file }}"
+          {
+            echo "## Unit Test Summary"
+            if [ -f "$SUMMARY_FILE" ]; then
+              while IFS='=' read -r key value; do
+                [ -n "$key" ] || continue
+                label="${key%_status}"
+                if [ "$value" -eq 0 ] 2>/dev/null; then
+                  echo "- [x] ${label}"
+                else
+                  echo "- [ ] ${label} (exit ${value})"
+                fi
+              done < "$SUMMARY_FILE"
+            else
+              echo "- [ ] summary_data_missing"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  smoke:
+    name: "🚬 Smoke Query"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [build]
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: latticedb-build
+          path: ${{ runner.temp }}/build-art
+
+      - name: Extract Build
+        run: |
+          mkdir -p build
+          tar -xzf "${RUNNER_TEMP}/build-art/latticedb-build.tar.gz" -C build
+
+      - name: Run Smoke SQL (streamed)
+        id: smoke
+        shell: bash
+        run: |
+          set +e
+          SUMMARY_FILE="$RUNNER_TEMP/summary.env"
+          LOG_DIR="$RUNNER_TEMP/logs"
+          mkdir -p "$LOG_DIR"
+          : > "$SUMMARY_FILE"
+
+          run_cmd() {
+            local label="$1"; shift
+            local logfile="$LOG_DIR/${label}.log"
+            echo "::group::${label}"
+            echo "[$(date -u +%FT%TZ)] START ${label}"
+            set -o pipefail
+            stdbuf -oL -eL "$@" |& tee "$logfile"
+            local status=${PIPESTATUS[0]}
+            echo "${label}_status=${status}" >> "$SUMMARY_FILE"
+            echo "[$(date -u +%FT%TZ)] END ${label} (exit ${status})"
+            echo "::endgroup::"
+            return $status
+          }
+
+          cat > "$RUNNER_TEMP/smoke.sql" <<'SQL'
+          CREATE TABLE t (id TEXT PRIMARY KEY, v INT);
+          INSERT INTO t (id, v) VALUES ('a', 1);
+          SELECT id, v FROM t;
+          EXIT;
+          SQL
+
+          chmod +x build/latticedb || true
+          run_cmd smoke bash -lc "build/latticedb < \"$RUNNER_TEMP/smoke.sql\""
+
+          echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Smoke Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-logs
+          path: ${{ runner.temp }}/logs
+          if-no-files-found: warn
+
+      - name: Publish Smoke Summary
+        if: always()
+        shell: bash
+        run: |
+          SUMMARY_FILE="${{ steps.smoke.outputs.summary_file }}"
+          {
+            echo "## Smoke Test Summary"
+            if [ -f "$SUMMARY_FILE" ]; then
+              while IFS='=' read -r key value; do
+                [ -n "$key" ] || continue
+                label="${key%_status}"
+                if [ "$value" -eq 0 ] 2>/dev/null; then
+                  echo "- [x] ${label}"
+                else
+                  echo "- [ ] ${label} (exit ${value})"
+                fi
+              done < "$SUMMARY_FILE"
+            else
+              echo "- [ ] summary_data_missing"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  package:
+    name: "📦 Package & Checksums"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [build, tests, smoke]
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: latticedb-build
+          path: ${{ runner.temp }}/build-art
+
+      - name: Create Checksums
+        run: |
+          cd "${RUNNER_TEMP}/build-art"
+          sha256sum latticedb-build.tar.gz > latticedb-build.sha256
+
+      - name: Upload Package & Checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: latticedb-package
+          path: |
+            ${{ runner.temp }}/build-art/latticedb-build.tar.gz
+            ${{ runner.temp }}/build-art/latticedb-build.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+  summary:
+    name: "🧾 Pipeline Summary"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    if: always()
+    needs: [lint, build, tests, smoke, package]
+    steps:
+      - name: Publish Overall Summary
+        shell: bash
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## CI/CD Pipeline Summary
+
+          | Phase | Status |
+          |------:|:-------|
+          | 🧹 Lint & Format | **${{ needs.lint.result }}** |
+          | 🏗️ Build | **${{ needs.build.result }}** |
+          | 🧪 Unit Tests | **${{ needs.tests.result }}** |
+          | 🚬 Smoke Query | **${{ needs.smoke.result }}** |
+          | 📦 Package & Checksums | **${{ needs.package.result }}** |
+
+          - Artifacts:
+            - Build: \`latticedb-build\`
+            - Logs: \`lint-logs\`, \`build-logs\`, \`test-logs\`, \`smoke-logs\`
+            - Package: \`latticedb-package\`
+          EOF
