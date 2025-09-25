@@ -22,12 +22,17 @@ jobs:
     name: "🔧 Build (Devcontainer)"
     runs-on: ubuntu-latest
     env:
-      CCACHE_DIR: ${{ runner.temp }}/.ccache   # runner context allowed at job/step scope
       CCACHE_MAXSIZE: 1G
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Prep Runner Paths
+        shell: bash
+        run: |
+          echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          echo "CCACHE_DIR=$RUNNER_TEMP/.ccache" >> "$GITHUB_ENV"
 
       - name: Cache ccache
         uses: actions/cache@v4
@@ -100,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: logs-build
-          path: ${{ runner.temp }}/logs/build
+          path: ${{ env.TEMP_DIR }}/logs/build
           if-no-files-found: warn
           retention-days: 7
 
@@ -136,11 +141,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Prep Runner Paths
+        shell: bash
+        run: |
+          echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: latticedb-build
-          path: ${{ runner.temp }}/dl
+          path: ${{ env.TEMP_DIR }}/dl
 
       - name: Extract Build
         shell: bash
@@ -203,7 +213,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: logs-test
-          path: ${{ runner.temp }}/logs/test
+          path: ${{ env.TEMP_DIR }}/logs/test
           if-no-files-found: warn
           retention-days: 7
 
@@ -236,11 +246,16 @@ jobs:
     needs: test
 
     steps:
+      - name: Prep Runner Paths
+        shell: bash
+        run: |
+          echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: latticedb-build
-          path: ${{ runner.temp }}/dl
+          path: ${{ env.TEMP_DIR }}/dl
 
       - name: Repackage & Checksum
         id: pkg
@@ -276,7 +291,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: logs-package
-          path: ${{ runner.temp }}/logs/package
+          path: ${{ env.TEMP_DIR }}/logs/package
           if-no-files-found: warn
           retention-days: 7
 
@@ -294,12 +309,17 @@ jobs:
     if: always()
 
     steps:
+      - name: Prep Runner Paths
+        shell: bash
+        run: |
+          echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+
       - name: Download All Summaries
         uses: actions/download-artifact@v4
         with:
           pattern: summary-*
           merge-multiple: true
-          path: ${{ runner.temp }}/summaries
+          path: ${{ env.TEMP_DIR }}/summaries
 
       - name: Publish Job Summary
         shell: bash
