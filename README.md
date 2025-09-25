@@ -65,8 +65,7 @@
 - [Implementation Status](#implementation-status)
   - [Core Components](#core-components)
   - [Test Coverage](#test-coverage)
-- [Roadmap](#roadmap)
-- [Limitations](#limitations)
+- [Benchmarks](#benchmarks)
 - [Contributing](#contributing)
 - [License](#license)
 - [Appendix: Glossary](#appendix-glossary)
@@ -286,6 +285,9 @@ The CLI provides an interactive shell to run SQL commands:
 ```
 
 Type `help` for a list of commands.
+
+> [!TIP]
+> Visit any `./latticedb` file in either `build` or `build-container` to see available options and run it so you don't have to manually build every time.
 
 ## Start with GUI
 
@@ -640,21 +642,22 @@ cd tests
 ./run_all.sh
 ```
 
-## Roadmap
+## Benchmarks
 
-* **Phase 1** ✅: MVCC, ULS storage, temporal/lineage, RLS/CLS, streaming MVs.
-* **Phase 2** 🚧: MRT CRDT layer + geo multi-master, DP framework, vector indexes.
-* **Phase 3**: TEE policy execution, learned index plugin GA, advanced QoS.
+Preliminary benchmarks show competitive performance on OLTP workloads compared to PostgreSQL and MySQL, with room for optimization in OLAP and vector search scenarios.
 
-## Limitations
+Visit the [`benchmarks` file](benchmarks/benchmark_main.cpp) for details.
 
-* LatticeDB is young. While the architecture targets production, expect:
+Run the native suite from the repository root:
 
-  * Smaller SQL surface than full SQL:2016 in early builds (expanding quickly).
-  * Query optimizer still learning (hybrid rule/cost + runtime feedback).
-  * Streaming integrations (Kafka/Pulsar) and vector plugins mature over time.
-* **Benchmarks**: Any numbers are **targets**, not guarantees, and vary by workload/hardware.
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release   # configure (skip if build/ already exists)
+cmake --build build --target latticedb_bench --config Release
+./build/latticedb_bench
+```
 
+Add `-v` to show per-iteration progress and `--vector` to include the optional vector-search benchmarks. Each run prints a summary table in the terminal and writes a `benchmark_results.csv` artifact in the project root.
+ 
 ## Contributing
 
 We ❤️ contributions! Ways to help:
