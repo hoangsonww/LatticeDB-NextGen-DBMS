@@ -23,7 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CCACHE_MAXSIZE: 1G
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -59,7 +58,6 @@ jobs:
           run_cmd() {
             local label="$1"; shift
             local logfile="$LOG_DIR/${label}.log"
-
             echo "::group::${label}"
             echo "[$(date -u +%T)] START ${label}"
             { stdbuf -oL -eL "$@" |& tee "$logfile"; } ; status=${PIPESTATUS[0]}
@@ -69,7 +67,6 @@ jobs:
           }
 
           export DEBIAN_FRONTEND=noninteractive
-
           run_cmd dependencies sudo apt-get update -o Acquire::Retries=3
           run_cmd packages sudo apt-get install -yq cmake g++ ninja-build ccache clang-format zip coreutils
 
@@ -77,17 +74,11 @@ jobs:
             -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
           run_cmd build cmake --build build -j
-
           run_cmd format cmake --build build --target format
-
           run_cmd rebuild cmake --build build -j
-
-          # Quick packaging of the build dir
           run_cmd package tar -czf "$ARTIFACT_DIR/latticedb-build.tar.gz" -C build .
 
-          # Expose paths to later steps
           echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
           echo "artifact_path=$ARTIFACT_DIR/latticedb-build.tar.gz" >> "$GITHUB_OUTPUT"
 
@@ -136,15 +127,13 @@ jobs:
     name: "🧪 Tests"
     runs-on: ubuntu-latest
     needs: build
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Prep Runner Paths
         shell: bash
-        run: |
-          echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+        run: echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
 
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
@@ -197,7 +186,6 @@ jobs:
             echo "tests/run_all.sh not present; skipping."
           fi
 
-          # Smoke SQL
           cat > "$RUNNER_TEMP/smoke.sql" <<'SQL'
           CREATE TABLE t (id TEXT PRIMARY KEY, v INT);
           INSERT INTO t (id, v) VALUES ('a', 1);
@@ -244,12 +232,10 @@ jobs:
     name: "📦 Package"
     runs-on: ubuntu-latest
     needs: test
-
     steps:
       - name: Prep Runner Paths
         shell: bash
-        run: |
-          echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+        run: echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
 
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
@@ -302,17 +288,76 @@ jobs:
           name: summary-package
           path: ${{ steps.pkg.outputs.summary_file }}
 
+  docker-ghcr:
+    name: "🐳 Docker → GHCR"
+    runs-on: ubuntu-latest
+    needs: package
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Prep Runner Paths
+        shell: bash
+        run: echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/latticedb
+          tags: |
+            type=raw,value=${{ github.sha }}
+            type=raw,value=latest
+
+      - name: Build and push
+        id: buildpush
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Record Docker Summary (success)
+        if: success()
+        shell: bash
+        run: echo "docker_status=0" > "$RUNNER_TEMP/summary-docker.env"
+
+      - name: Record Docker Summary (failure)
+        if: failure()
+        shell: bash
+        run: echo "docker_status=1" > "$RUNNER_TEMP/summary-docker.env"
+
+      - name: Upload Docker Summary Data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: summary-docker
+          path: ${{ env.TEMP_DIR }}/summary-docker.env
+
   summary:
     name: "📝 Summary"
     runs-on: ubuntu-latest
-    needs: [build, test, package]
+    needs: [build, test, package, docker-ghcr]
     if: always()
-
     steps:
       - name: Prep Runner Paths
         shell: bash
-        run: |
-          echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+        run: echo "TEMP_DIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
 
       - name: Download All Summaries
         uses: actions/download-artifact@v4
@@ -349,8 +394,10 @@ jobs:
           report_file "🔧 Build"   "${RUNNER_TEMP}/summaries/summary-build.env"
           report_file "🧪 Tests"   "${RUNNER_TEMP}/summaries/summary-test.env"
           report_file "📦 Package" "${RUNNER_TEMP}/summaries/summary-package.env"
+          report_file "🐳 Docker"  "${RUNNER_TEMP}/summaries/summary-docker.env"
 
           echo "### 📎 Artifacts & Logs" >> "$GITHUB_STEP_SUMMARY"
           echo "- Build: \`latticedb-build\`, logs in \`logs-build\`"  >> "$GITHUB_STEP_SUMMARY"
           echo "- Tests: logs in \`logs-test\`"                      >> "$GITHUB_STEP_SUMMARY"
           echo "- Package: \`latticedb-release\`, logs in \`logs-package\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Docker: image tags \`latest\`, \`${{ github.sha }}\` at \`ghcr.io/${{ github.repository_owner }}/latticedb\`" >> "$GITHUB_STEP_SUMMARY"

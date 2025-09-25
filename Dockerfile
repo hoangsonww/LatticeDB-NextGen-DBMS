@@ -1,13 +1,22 @@
 FROM ubuntu:24.04
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      cmake g++ ninja-build ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        ninja-build \
+        liblz4-dev \
+        libzstd-dev \
+        libreadline-dev \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY . .
-RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build build -j
 
-ENTRYPOINT ["./build/latticedb"]
+RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build --config Release
+
+CMD ["./build/latticedb"]
