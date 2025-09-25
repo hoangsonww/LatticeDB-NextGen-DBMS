@@ -7,7 +7,6 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
-# Avoid duplicate runs per branch/PR
 concurrency:
   group: latticedb-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -17,13 +16,14 @@ permissions:
 
 env:
   CMAKE_BUILD_TYPE: RelWithDebInfo
-  CCACHE_DIR: ${{ runner.temp }}/.ccache
-  CCACHE_MAXSIZE: 1G
 
 jobs:
   build:
     name: "🔧 Build (Devcontainer)"
     runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ runner.temp }}/.ccache   # runner context allowed at job/step scope
+      CCACHE_MAXSIZE: 1G
 
     steps:
       - name: Checkout Repository
@@ -57,10 +57,7 @@ jobs:
 
             echo "::group::${label}"
             echo "[$(date -u +%T)] START ${label}"
-
-            # Stream to console and save to file; capture exit status of the command
             { stdbuf -oL -eL "$@" |& tee "$logfile"; } ; status=${PIPESTATUS[0]}
-
             echo "${label}_status=${status}" >> "$SUMMARY_FILE"
             echo "[$(date -u +%T)] END ${label} (exit ${status})"
             echo "::endgroup::"
@@ -71,7 +68,6 @@ jobs:
           run_cmd dependencies sudo apt-get update -o Acquire::Retries=3
           run_cmd packages sudo apt-get install -yq cmake g++ ninja-build ccache clang-format zip coreutils
 
-          # Configure & build with ccache
           run_cmd configure cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
@@ -79,16 +75,14 @@ jobs:
 
           run_cmd build cmake --build build -j
 
-          # Formatting (doesn't change tree, but we record status)
           run_cmd format cmake --build build --target format
 
-          # Rebuild after formatting (should be quick with ccache)
           run_cmd rebuild cmake --build build -j
 
-          # Package build dir
+          # Quick packaging of the build dir
           run_cmd package tar -czf "$ARTIFACT_DIR/latticedb-build.tar.gz" -C build .
 
-          # Outputs for downstream steps/jobs
+          # Expose paths to later steps
           echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
           echo "artifact_path=$ARTIFACT_DIR/latticedb-build.tar.gz" >> "$GITHUB_OUTPUT"
 
@@ -117,7 +111,7 @@ jobs:
           name: summary-build
           path: ${{ steps.build_and_log.outputs.summary_file }}
 
-      - name: Fail Build if any step failed
+      - name: Fail Build if any sub-step failed
         shell: bash
         run: |
           SUMMARY_FILE="${{ steps.build_and_log.outputs.summary_file }}"
@@ -193,7 +187,7 @@ jobs:
             echo "tests/run_all.sh not present; skipping."
           fi
 
-          # Quick smoke SQL
+          # Smoke SQL
           cat > "$RUNNER_TEMP/smoke.sql" <<'SQL'
           CREATE TABLE t (id TEXT PRIMARY KEY, v INT);
           INSERT INTO t (id, v) VALUES ('a', 1);
@@ -220,7 +214,7 @@ jobs:
           name: summary-test
           path: ${{ steps.run_tests.outputs.summary_file }}
 
-      - name: Fail Tests if any step failed
+      - name: Fail Tests if any sub-step failed
         shell: bash
         run: |
           SUMMARY_FILE="${{ steps.run_tests.outputs.summary_file }}"
