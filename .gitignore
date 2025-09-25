@@ -1,6 +1,4 @@
 # Build artifacts
-/build/
-/build-*/
 /out/
 /dist/
 /*.log
