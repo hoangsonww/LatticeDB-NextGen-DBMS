@@ -52,6 +52,7 @@
   - [GUI Features](#gui-features)
   - [Running the GUI](#running-the-gui)
   - [Mock Mode (No Server Required)](#mock-mode-no-server-required)
+  - [GUI Preview](#gui-preview)
 - [Zipping the DBMS](#zipping-the-dbms)
 - [Core Concepts & Examples](#core-concepts--examples)
   - [Mergeable Relational Tables (MRT)](#mergeable-relational-tables-mrt)
@@ -345,6 +346,11 @@ _How the GUI looks..._
 <p align="center">
   <img src="docs/settings.png" alt="LatticeDB GUI Schema Browser Screenshot" width="100%"/>
 </p>
+
+### GUI Preview
+
+> [!IMPORTANT]
+> Preview the GUI without building from source by visiting the [https://latticedb.vercel.app/](https://latticedb.vercel.app/) hosted on Vercel.
 
 ## Zipping the DBMS
 
