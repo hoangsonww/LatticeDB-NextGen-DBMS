@@ -24,7 +24,7 @@ export default function App() {
           : 'bg-white/80 border-gray-200'
       }`}>
         <div className="max-w-7xl mx-auto">
-          <Toolbar onOpen={() => {}} onSave={() => {}} />
+          <Toolbar />
         </div>
       </header>
 

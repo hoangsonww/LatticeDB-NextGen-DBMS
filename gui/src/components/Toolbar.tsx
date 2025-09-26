@@ -1,8 +1,8 @@
 import { Play, Save, FolderOpen, Database, Moon, Sun, Zap, Star, Settings } from "lucide-react"
 import { useStore } from "../store"
-import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
-export default function Toolbar({ onOpen, onSave }: { onOpen: () => void; onSave: () => void }) {
+export default function Toolbar() {
   const { run, executing, darkMode, toggleDarkMode, favorites, sql, setSql } = useStore(s => ({
     run: s.run,
     executing: s.executing,
@@ -12,6 +12,8 @@ export default function Toolbar({ onOpen, onSave }: { onOpen: () => void; onSave
     sql: s.sql,
     setSql: s.setSql
   }))
+
+  const navigate = useNavigate()
 
 
   const handleOpen = () => {
@@ -149,7 +151,7 @@ export default function Toolbar({ onOpen, onSave }: { onOpen: () => void; onSave
         </button>
 
         <button
-          onClick={() => window.open('/settings', '_blank')}
+          onClick={() => navigate('/settings')}
           className={`p-2.5 rounded-lg transition-all duration-200 hover:scale-105 ${
             darkMode
               ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-200'

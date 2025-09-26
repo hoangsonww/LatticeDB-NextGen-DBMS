@@ -1,9 +1,11 @@
 import { useStore } from "./store"
 import { Moon, Sun, Shield, Database, Star, Activity, ArrowLeft } from "lucide-react"
 import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
 export default function Settings() {
   const { darkMode, toggleDarkMode, favorites, history, tables, dpEpsilon, setDp } = useStore()
+  const navigate = useNavigate()
 
   useEffect(() => {
     document.title = "Settings - LatticeDB Studio"
@@ -14,7 +16,7 @@ export default function Settings() {
       <header className={`border-b ${darkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'}`}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
           <button
-            onClick={() => window.close()}
+            onClick={() => navigate('/')}
             className={`p-2 rounded hover:bg-opacity-10 hover:bg-gray-500`}
           >
             <ArrowLeft size={20} />
