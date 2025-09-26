@@ -28,6 +28,8 @@ enum class ValueType {
   VECTOR
 };
 
+std::string value_type_to_string(ValueType type);
+
 class Value {
 public:
   using ValueData = std::variant<std::monostate,       // NULL
