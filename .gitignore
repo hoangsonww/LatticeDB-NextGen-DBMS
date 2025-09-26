@@ -17,3 +17,5 @@ Thumbs.db
 .ccache/
 .cache/
 /gui/node_modules/
+/gui/dist/
+/gui/.vercel/
