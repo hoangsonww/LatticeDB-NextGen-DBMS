@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "replacer.h"
 
 namespace latticedb {

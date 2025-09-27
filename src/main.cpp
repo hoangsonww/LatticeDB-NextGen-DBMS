@@ -1,7 +1,9 @@
 #include "common/logger.h"
 #include "engine/database_engine.h"
-#include "telemetry/telemetry_manager.h"
+#ifdef HAVE_TELEMETRY
 #include "telemetry/metrics_collector.h"
+#include "telemetry/telemetry_manager.h"
+#endif
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -312,6 +314,7 @@ int main(int argc, char* argv[]) {
   // Logger disabled in minimal build to avoid exit-time issues
 
   try {
+#ifdef HAVE_TELEMETRY
     // Initialize telemetry if enabled
     auto& telemetry_manager = latticedb::telemetry::TelemetryManager::getInstance();
     auto& metrics_collector = latticedb::telemetry::MetricsCollector::getInstance();
@@ -325,14 +328,18 @@ int main(int argc, char* argv[]) {
     const char* otlp_endpoint = std::getenv("OTLP_ENDPOINT");
 
     if (telemetry_enabled && std::string(telemetry_enabled) == "true") {
-        telemetry_config.enabled = true;
-        if (jaeger_endpoint) telemetry_config.jaeger_endpoint = jaeger_endpoint;
-        if (prometheus_endpoint) telemetry_config.prometheus_endpoint = prometheus_endpoint;
-        if (otlp_endpoint) telemetry_config.otlp_endpoint = otlp_endpoint;
+      telemetry_config.enabled = true;
+      if (jaeger_endpoint)
+        telemetry_config.jaeger_endpoint = jaeger_endpoint;
+      if (prometheus_endpoint)
+        telemetry_config.prometheus_endpoint = prometheus_endpoint;
+      if (otlp_endpoint)
+        telemetry_config.otlp_endpoint = otlp_endpoint;
 
-        telemetry_manager.initialize(telemetry_config);
-        metrics_collector.initialize();
+      telemetry_manager.initialize(telemetry_config);
+      metrics_collector.initialize();
     }
+#endif
 
     bool test_mode = !isatty(fileno(stdin));
     // Initialize database engine
@@ -518,8 +525,10 @@ int main(int argc, char* argv[]) {
       // Ignore errors during shutdown
     }
 
+#ifdef HAVE_TELEMETRY
     // Shutdown telemetry
     telemetry_manager.shutdown();
+#endif
 
     if (!test_mode) {
       std::cout << "\nGoodbye!\n";

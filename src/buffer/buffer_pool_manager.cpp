@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "buffer_pool_manager.h"
 
 namespace latticedb {

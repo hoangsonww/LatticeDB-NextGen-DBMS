@@ -11,6 +11,243 @@ The monitoring stack consists of four main components:
 3. **Jaeger** - Distributed tracing
 4. **OpenTelemetry** - Telemetry data collection and processing
 
+## Architecture Diagrams
+
+### 1. Monitoring Stack Architecture
+
+```mermaid
+graph TB
+    subgraph "LatticeDB Application"
+        APP[LatticeDB Server<br/>:8080]
+        METRICS["/metrics endpoint"]
+        APP --> METRICS
+    end
+
+    subgraph "Data Layer"
+        POSTGRES[(PostgreSQL<br/>:5432)]
+        REDIS[(Redis<br/>:6379)]
+        APP --> POSTGRES
+        APP --> REDIS
+    end
+
+    subgraph "Telemetry Collection"
+        OTEL[OpenTelemetry Collector<br/>:4317/4318]
+        APP -->|"OTLP gRPC/HTTP"| OTEL
+    end
+
+    subgraph "Metrics & Storage"
+        PROMETHEUS[Prometheus<br/>:9090]
+        PROMETHEUS_DATA[(Prometheus TSDB)]
+        OTEL -->|"Metrics"| PROMETHEUS
+        METRICS -->|"Scrape /metrics"| PROMETHEUS
+        PROMETHEUS --> PROMETHEUS_DATA
+    end
+
+    subgraph "Tracing"
+        JAEGER[Jaeger All-in-One<br/>:16686]
+        JAEGER_DATA[(Jaeger Storage)]
+        OTEL -->|"Traces"| JAEGER
+        APP -->|"Direct traces"| JAEGER
+        JAEGER --> JAEGER_DATA
+    end
+
+    subgraph "Visualization & Alerting"
+        GRAFANA[Grafana<br/>:3000]
+        DASHBOARDS[Pre-configured<br/>Dashboards]
+        PROMETHEUS -->|"PromQL Queries"| GRAFANA
+        JAEGER -->|"Trace Data"| GRAFANA
+        GRAFANA --> DASHBOARDS
+    end
+
+    subgraph "Health Monitoring"
+        OTEL_HEALTH[OTel Health Check<br/>:13133]
+        OTEL --> OTEL_HEALTH
+        PROMETHEUS_HEALTH[Prometheus Health<br/>/-/healthy]
+        PROMETHEUS --> PROMETHEUS_HEALTH
+        GRAFANA_HEALTH[Grafana Health<br/>/api/health]
+        GRAFANA --> GRAFANA_HEALTH
+    end
+
+    classDef primary fill:#e1f5fe
+    classDef storage fill:#f3e5f5
+    classDef monitoring fill:#e8f5e8
+
+    class APP,POSTGRES,REDIS primary
+    class PROMETHEUS_DATA,JAEGER_DATA,DASHBOARDS storage
+    class PROMETHEUS,GRAFANA,JAEGER,OTEL monitoring
+```
+
+### 2. Multi-Cloud Deployment Architecture
+
+```mermaid
+graph TB
+    subgraph "AWS Deployment"
+        subgraph "AWS ECS Fargate"
+            AWS_LATTICE[LatticeDB Container]
+            AWS_PROMETHEUS[Prometheus Container]
+            AWS_GRAFANA[Grafana Container]
+        end
+
+        subgraph "AWS Storage"
+            AWS_EFS[EFS for Config/Data]
+            AWS_LOGS[CloudWatch Logs]
+        end
+
+        subgraph "AWS Networking"
+            AWS_ALB[Application Load Balancer]
+            AWS_SG[Security Groups]
+            AWS_VPC[VPC with Private Subnets]
+        end
+
+        AWS_ALB --> AWS_GRAFANA
+        AWS_PROMETHEUS --> AWS_EFS
+        AWS_GRAFANA --> AWS_EFS
+        AWS_LATTICE --> AWS_LOGS
+        AWS_SG --> AWS_VPC
+    end
+
+    subgraph "Azure Deployment"
+        subgraph "Azure Container Apps"
+            AZURE_LATTICE[LatticeDB Container]
+            AZURE_PROMETHEUS[Prometheus Container]
+            AZURE_GRAFANA[Grafana Container]
+        end
+
+        subgraph "Azure Storage"
+            AZURE_FILES[Azure Files Shares]
+            AZURE_INSIGHTS[Application Insights]
+        end
+
+        subgraph "Azure Monitoring"
+            AZURE_ALERTS[Monitor Metric Alerts]
+            AZURE_ACTIONS[Action Groups]
+        end
+
+        AZURE_PROMETHEUS --> AZURE_FILES
+        AZURE_GRAFANA --> AZURE_FILES
+        AZURE_LATTICE --> AZURE_INSIGHTS
+        AZURE_ALERTS --> AZURE_ACTIONS
+    end
+
+    subgraph "GCP Deployment"
+        subgraph "Google Cloud Run"
+            GCP_LATTICE[LatticeDB Service]
+            GCP_PROMETHEUS[Prometheus Service]
+            GCP_GRAFANA[Grafana Service]
+        end
+
+        subgraph "GCP Storage"
+            GCP_SECRETS[Secret Manager]
+            GCP_STORAGE[Cloud Storage]
+        end
+
+        subgraph "GCP Monitoring"
+            GCP_MONITORING[Cloud Monitoring]
+            GCP_ALERTS[Alert Policies]
+            GCP_UPTIME[Uptime Checks]
+        end
+
+        GCP_PROMETHEUS --> GCP_SECRETS
+        GCP_GRAFANA --> GCP_SECRETS
+        GCP_LATTICE --> GCP_MONITORING
+        GCP_ALERTS --> GCP_UPTIME
+    end
+
+    subgraph "HashiCorp Stack"
+        subgraph "Nomad Cluster"
+            NOMAD_PROMETHEUS[Prometheus Job]
+            NOMAD_GRAFANA[Grafana Job]
+            NOMAD_ALERTMGR[Alertmanager Job]
+            NOMAD_EXPORTERS[Node/cAdvisor Exporters]
+        end
+
+        subgraph "Service Discovery"
+            CONSUL[Consul Service Discovery]
+            CONSUL_CONNECT[Consul Connect]
+        end
+
+        subgraph "Secrets & Storage"
+            VAULT[Vault Secrets]
+            CSI_VOLUMES[CSI Volumes]
+        end
+
+        NOMAD_PROMETHEUS --> CONSUL
+        NOMAD_GRAFANA --> CONSUL_CONNECT
+        VAULT --> CSI_VOLUMES
+    end
+
+    classDef aws fill:#ff9900,color:#fff
+    classDef azure fill:#0078d4,color:#fff
+    classDef gcp fill:#4285f4,color:#fff
+    classDef hashicorp fill:#7c3aed,color:#fff
+
+    class AWS_LATTICE,AWS_PROMETHEUS,AWS_GRAFANA,AWS_EFS,AWS_LOGS,AWS_ALB aws
+    class AZURE_LATTICE,AZURE_PROMETHEUS,AZURE_GRAFANA,AZURE_FILES,AZURE_INSIGHTS,AZURE_ALERTS azure
+    class GCP_LATTICE,GCP_PROMETHEUS,GCP_GRAFANA,GCP_SECRETS,GCP_MONITORING gcp
+    class NOMAD_PROMETHEUS,NOMAD_GRAFANA,NOMAD_ALERTMGR,CONSUL,VAULT hashicorp
+```
+
+### 3. Telemetry Data Flow
+
+```mermaid
+sequenceDiagram
+    participant App as LatticeDB App
+    participant OTel as OpenTelemetry Collector
+    participant Prom as Prometheus
+    participant Jaeger as Jaeger
+    participant Grafana as Grafana
+    participant Alert as Alertmanager
+
+    Note over App: Application Operations
+    App->>App: Execute Database Query
+    App->>App: Generate Metrics & Traces
+
+    Note over App,OTel: Telemetry Export
+    App->>+OTel: Send OTLP Traces (gRPC :4317)
+    App->>+OTel: Send OTLP Metrics (HTTP :4318)
+    App->>Prom: Expose /metrics endpoint
+
+    Note over OTel: Data Processing
+    OTel->>OTel: Apply Resource Processors
+    OTel->>OTel: Batch & Sample (100% dev, 1-10% prod)
+
+    Note over OTel,Jaeger: Trace Export
+    OTel->>+Jaeger: Export Traces (gRPC :14250)
+    Jaeger->>Jaeger: Store in Memory/External DB
+
+    Note over OTel,Prom: Metrics Export
+    OTel->>Prom: Export Processed Metrics (:8888)
+    Prom->>App: Scrape Application Metrics (:8080/metrics)
+    Prom->>OTel: Scrape OTel Metrics (:8888/metrics)
+    Prom->>Jaeger: Scrape Jaeger Metrics (:5778/metrics)
+
+    Note over Prom: Storage & Evaluation
+    Prom->>Prom: Store TSDB (15s intervals)
+    Prom->>Prom: Evaluate Alert Rules
+    Prom->>Alert: Send Alerts (if configured)
+
+    Note over Grafana: Visualization
+    Grafana->>+Prom: Query Metrics (PromQL)
+    Prom-->>-Grafana: Return Time Series Data
+    Grafana->>+Jaeger: Query Traces
+    Jaeger-->>-Grafana: Return Trace Data
+
+    Note over Grafana: Dashboard Updates
+    Grafana->>Grafana: Render Dashboards
+    Grafana->>Grafana: Process Alert Rules
+
+    Note over Alert: Alert Management (HashiCorp only)
+    Alert->>Alert: Group & Route Alerts
+    Alert->>Alert: Send Notifications (Email/Slack)
+
+    Note over App,Grafana: Health Checks
+    App->>App: Health Check (:8080/health)
+    OTel->>OTel: Health Check (:13133)
+    Prom->>Prom: Health Check (/-/healthy)
+    Jaeger->>Jaeger: Health Check (:16686)
+    Grafana->>Grafana: Health Check (/api/health)
+```
+
 ## Components
 
 ### Prometheus (Metrics)

@@ -28,13 +28,13 @@ void TelemetryManager::initialize(const TelemetryConfig& config) {
     config_ = config;
 
     if (!config_.enabled) {
-        Logger::info("Telemetry is disabled");
+        Logger::get_instance()->info("Telemetry is disabled");
         return;
     }
 
 #ifdef HAVE_TELEMETRY
     try {
-        Logger::info("Initializing telemetry with Jaeger endpoint: " + config_.jaeger_endpoint);
+        Logger::get_instance()->info("Initializing telemetry with Jaeger endpoint: {}", config_.jaeger_endpoint);
 
         // Create resource
         auto resource = opentelemetry::sdk::resource::Resource::Create({
@@ -84,13 +84,13 @@ void TelemetryManager::initialize(const TelemetryConfig& config) {
             config_.service_name, config_.service_version);
 
         enabled_ = true;
-        Logger::info("Telemetry initialized successfully");
+        Logger::get_instance()->info("Telemetry initialized successfully");
     } catch (const std::exception& e) {
-        Logger::error("Failed to initialize telemetry: " + std::string(e.what()));
+        Logger::get_instance()->error("Failed to initialize telemetry: {}", e.what());
         enabled_ = false;
     }
 #else
-    Logger::warn("Telemetry requested but not compiled with HAVE_TELEMETRY support");
+    Logger::get_instance()->warn("Telemetry requested but not compiled with HAVE_TELEMETRY support");
     enabled_ = false;
 #endif
 }
@@ -109,9 +109,9 @@ void TelemetryManager::shutdown() {
             static_cast<opentelemetry::sdk::metrics::MeterProvider*>(meter_provider_.get())->ForceFlush(std::chrono::milliseconds(5000));
         }
 
-        Logger::info("Telemetry shutdown completed");
+        Logger::get_instance()->info("Telemetry shutdown completed");
     } catch (const std::exception& e) {
-        Logger::error("Error during telemetry shutdown: " + std::string(e.what()));
+        Logger::get_instance()->error("Error during telemetry shutdown: {}", e.what());
     }
 #endif
 
