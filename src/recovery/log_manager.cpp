@@ -1,3 +1,7 @@
+#include <thread>
+
+#include <mutex>
+
 // Implementation for log_manager.h
 #include "log_manager.h"
 #include <chrono>

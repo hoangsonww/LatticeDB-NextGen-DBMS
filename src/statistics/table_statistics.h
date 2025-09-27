@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 
 #include "../types/schema.h"
 #include "../types/value.h"

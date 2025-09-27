@@ -1,4 +1,7 @@
 #pragma once
+#include <thread>
+#include <shared_mutex>
+#include <mutex>
 
 #include "../transaction/transaction.h"
 #include "../types/value.h"

@@ -265,6 +265,33 @@ build CMakeFiles/latticedb_cli.dir/src/network/server.cpp.o: CXX_COMPILER__latti
   TARGET_COMPILE_PDB = CMakeFiles/latticedb_cli.dir/
   TARGET_PDB = latticedb.pdb
 
+build CMakeFiles/latticedb_cli.dir/src/telemetry/telemetry_manager.cpp.o: CXX_COMPILER__latticedb_cli_Release /workspaces/app/src/telemetry/telemetry_manager.cpp || cmake_object_order_depends_target_latticedb_cli
+  DEP_FILE = CMakeFiles/latticedb_cli.dir/src/telemetry/telemetry_manager.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_cli.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_cli.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_cli.dir/
+  TARGET_PDB = latticedb.pdb
+
+build CMakeFiles/latticedb_cli.dir/src/telemetry/metrics_collector.cpp.o: CXX_COMPILER__latticedb_cli_Release /workspaces/app/src/telemetry/metrics_collector.cpp || cmake_object_order_depends_target_latticedb_cli
+  DEP_FILE = CMakeFiles/latticedb_cli.dir/src/telemetry/metrics_collector.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_cli.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_cli.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_cli.dir/
+  TARGET_PDB = latticedb.pdb
+
+build CMakeFiles/latticedb_cli.dir/src/telemetry/tracer.cpp.o: CXX_COMPILER__latticedb_cli_Release /workspaces/app/src/telemetry/tracer.cpp || cmake_object_order_depends_target_latticedb_cli
+  DEP_FILE = CMakeFiles/latticedb_cli.dir/src/telemetry/tracer.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_cli.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_cli.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_cli.dir/
+  TARGET_PDB = latticedb.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target latticedb_cli
@@ -273,7 +300,7 @@ build CMakeFiles/latticedb_cli.dir/src/network/server.cpp.o: CXX_COMPILER__latti
 #############################################
 # Link the executable latticedb
 
-build latticedb: CXX_EXECUTABLE_LINKER__latticedb_cli_Release CMakeFiles/latticedb_cli.dir/src/main.cpp.o CMakeFiles/latticedb_cli.dir/src/types/value.cpp.o CMakeFiles/latticedb_cli.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_cli.dir/src/types/schema.cpp.o CMakeFiles/latticedb_cli.dir/src/common/exception.cpp.o CMakeFiles/latticedb_cli.dir/src/common/logger.cpp.o CMakeFiles/latticedb_cli.dir/src/storage/page.cpp.o CMakeFiles/latticedb_cli.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_cli.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_cli.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_cli.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_cli.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_cli.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_cli.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_cli.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_cli.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_cli.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_cli.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_cli.dir/src/network/server.cpp.o
+build latticedb: CXX_EXECUTABLE_LINKER__latticedb_cli_Release CMakeFiles/latticedb_cli.dir/src/main.cpp.o CMakeFiles/latticedb_cli.dir/src/types/value.cpp.o CMakeFiles/latticedb_cli.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_cli.dir/src/types/schema.cpp.o CMakeFiles/latticedb_cli.dir/src/common/exception.cpp.o CMakeFiles/latticedb_cli.dir/src/common/logger.cpp.o CMakeFiles/latticedb_cli.dir/src/storage/page.cpp.o CMakeFiles/latticedb_cli.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_cli.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_cli.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_cli.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_cli.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_cli.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_cli.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_cli.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_cli.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_cli.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_cli.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_cli.dir/src/network/server.cpp.o CMakeFiles/latticedb_cli.dir/src/telemetry/telemetry_manager.cpp.o CMakeFiles/latticedb_cli.dir/src/telemetry/metrics_collector.cpp.o CMakeFiles/latticedb_cli.dir/src/telemetry/tracer.cpp.o
   FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG
   OBJECT_DIR = CMakeFiles/latticedb_cli.dir
   POST_BUILD = :
@@ -507,6 +534,33 @@ build CMakeFiles/latticedb_server.dir/src/network/server.cpp.o: CXX_COMPILER__la
   TARGET_COMPILE_PDB = CMakeFiles/latticedb_server.dir/
   TARGET_PDB = latticedb_server.pdb
 
+build CMakeFiles/latticedb_server.dir/src/telemetry/telemetry_manager.cpp.o: CXX_COMPILER__latticedb_server_Release /workspaces/app/src/telemetry/telemetry_manager.cpp || cmake_object_order_depends_target_latticedb_server
+  DEP_FILE = CMakeFiles/latticedb_server.dir/src/telemetry/telemetry_manager.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_server.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_server.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_server.dir/
+  TARGET_PDB = latticedb_server.pdb
+
+build CMakeFiles/latticedb_server.dir/src/telemetry/metrics_collector.cpp.o: CXX_COMPILER__latticedb_server_Release /workspaces/app/src/telemetry/metrics_collector.cpp || cmake_object_order_depends_target_latticedb_server
+  DEP_FILE = CMakeFiles/latticedb_server.dir/src/telemetry/metrics_collector.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_server.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_server.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_server.dir/
+  TARGET_PDB = latticedb_server.pdb
+
+build CMakeFiles/latticedb_server.dir/src/telemetry/tracer.cpp.o: CXX_COMPILER__latticedb_server_Release /workspaces/app/src/telemetry/tracer.cpp || cmake_object_order_depends_target_latticedb_server
+  DEP_FILE = CMakeFiles/latticedb_server.dir/src/telemetry/tracer.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_server.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_server.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_server.dir/
+  TARGET_PDB = latticedb_server.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target latticedb_server
@@ -515,7 +569,7 @@ build CMakeFiles/latticedb_server.dir/src/network/server.cpp.o: CXX_COMPILER__la
 #############################################
 # Link the executable latticedb_server
 
-build latticedb_server: CXX_EXECUTABLE_LINKER__latticedb_server_Release CMakeFiles/latticedb_server.dir/server_main.cpp.o CMakeFiles/latticedb_server.dir/src/types/value.cpp.o CMakeFiles/latticedb_server.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_server.dir/src/types/schema.cpp.o CMakeFiles/latticedb_server.dir/src/common/exception.cpp.o CMakeFiles/latticedb_server.dir/src/common/logger.cpp.o CMakeFiles/latticedb_server.dir/src/storage/page.cpp.o CMakeFiles/latticedb_server.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_server.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_server.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_server.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_server.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_server.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_server.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_server.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_server.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_server.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_server.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_server.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_server.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_server.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_server.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_server.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_server.dir/src/network/server.cpp.o
+build latticedb_server: CXX_EXECUTABLE_LINKER__latticedb_server_Release CMakeFiles/latticedb_server.dir/server_main.cpp.o CMakeFiles/latticedb_server.dir/src/types/value.cpp.o CMakeFiles/latticedb_server.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_server.dir/src/types/schema.cpp.o CMakeFiles/latticedb_server.dir/src/common/exception.cpp.o CMakeFiles/latticedb_server.dir/src/common/logger.cpp.o CMakeFiles/latticedb_server.dir/src/storage/page.cpp.o CMakeFiles/latticedb_server.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_server.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_server.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_server.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_server.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_server.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_server.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_server.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_server.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_server.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_server.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_server.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_server.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_server.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_server.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_server.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_server.dir/src/network/server.cpp.o CMakeFiles/latticedb_server.dir/src/telemetry/telemetry_manager.cpp.o CMakeFiles/latticedb_server.dir/src/telemetry/metrics_collector.cpp.o CMakeFiles/latticedb_server.dir/src/telemetry/tracer.cpp.o
   FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG
   OBJECT_DIR = CMakeFiles/latticedb_server.dir
   POST_BUILD = :
@@ -749,6 +803,33 @@ build CMakeFiles/latticedb_shell.dir/src/network/server.cpp.o: CXX_COMPILER__lat
   TARGET_COMPILE_PDB = CMakeFiles/latticedb_shell.dir/
   TARGET_PDB = latticedb_shell.pdb
 
+build CMakeFiles/latticedb_shell.dir/src/telemetry/telemetry_manager.cpp.o: CXX_COMPILER__latticedb_shell_Release /workspaces/app/src/telemetry/telemetry_manager.cpp || cmake_object_order_depends_target_latticedb_shell
+  DEP_FILE = CMakeFiles/latticedb_shell.dir/src/telemetry/telemetry_manager.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_shell.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_shell.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_shell.dir/
+  TARGET_PDB = latticedb_shell.pdb
+
+build CMakeFiles/latticedb_shell.dir/src/telemetry/metrics_collector.cpp.o: CXX_COMPILER__latticedb_shell_Release /workspaces/app/src/telemetry/metrics_collector.cpp || cmake_object_order_depends_target_latticedb_shell
+  DEP_FILE = CMakeFiles/latticedb_shell.dir/src/telemetry/metrics_collector.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_shell.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_shell.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_shell.dir/
+  TARGET_PDB = latticedb_shell.pdb
+
+build CMakeFiles/latticedb_shell.dir/src/telemetry/tracer.cpp.o: CXX_COMPILER__latticedb_shell_Release /workspaces/app/src/telemetry/tracer.cpp || cmake_object_order_depends_target_latticedb_shell
+  DEP_FILE = CMakeFiles/latticedb_shell.dir/src/telemetry/tracer.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_shell.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_shell.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_shell.dir/
+  TARGET_PDB = latticedb_shell.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target latticedb_shell
@@ -757,7 +838,7 @@ build CMakeFiles/latticedb_shell.dir/src/network/server.cpp.o: CXX_COMPILER__lat
 #############################################
 # Link the executable latticedb_shell
 
-build latticedb_shell: CXX_EXECUTABLE_LINKER__latticedb_shell_Release CMakeFiles/latticedb_shell.dir/cli_main.cpp.o CMakeFiles/latticedb_shell.dir/src/types/value.cpp.o CMakeFiles/latticedb_shell.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_shell.dir/src/types/schema.cpp.o CMakeFiles/latticedb_shell.dir/src/common/exception.cpp.o CMakeFiles/latticedb_shell.dir/src/common/logger.cpp.o CMakeFiles/latticedb_shell.dir/src/storage/page.cpp.o CMakeFiles/latticedb_shell.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_shell.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_shell.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_shell.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_shell.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_shell.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_shell.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_shell.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_shell.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_shell.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_shell.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_shell.dir/src/network/server.cpp.o
+build latticedb_shell: CXX_EXECUTABLE_LINKER__latticedb_shell_Release CMakeFiles/latticedb_shell.dir/cli_main.cpp.o CMakeFiles/latticedb_shell.dir/src/types/value.cpp.o CMakeFiles/latticedb_shell.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_shell.dir/src/types/schema.cpp.o CMakeFiles/latticedb_shell.dir/src/common/exception.cpp.o CMakeFiles/latticedb_shell.dir/src/common/logger.cpp.o CMakeFiles/latticedb_shell.dir/src/storage/page.cpp.o CMakeFiles/latticedb_shell.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_shell.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_shell.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_shell.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_shell.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_shell.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_shell.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_shell.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_shell.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_shell.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_shell.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_shell.dir/src/network/server.cpp.o CMakeFiles/latticedb_shell.dir/src/telemetry/telemetry_manager.cpp.o CMakeFiles/latticedb_shell.dir/src/telemetry/metrics_collector.cpp.o CMakeFiles/latticedb_shell.dir/src/telemetry/tracer.cpp.o
   FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG
   OBJECT_DIR = CMakeFiles/latticedb_shell.dir
   POST_BUILD = :
@@ -1095,6 +1176,36 @@ build CMakeFiles/latticedb_test.dir/src/network/server.cpp.o: CXX_COMPILER__latt
   TARGET_COMPILE_PDB = CMakeFiles/latticedb_test.dir/
   TARGET_PDB = latticedb_test.pdb
 
+build CMakeFiles/latticedb_test.dir/src/telemetry/telemetry_manager.cpp.o: CXX_COMPILER__latticedb_test_Release /workspaces/app/src/telemetry/telemetry_manager.cpp || cmake_object_order_depends_target_latticedb_test
+  DEFINES = -DTESTING
+  DEP_FILE = CMakeFiles/latticedb_test.dir/src/telemetry/telemetry_manager.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_test.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_test.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_test.dir/
+  TARGET_PDB = latticedb_test.pdb
+
+build CMakeFiles/latticedb_test.dir/src/telemetry/metrics_collector.cpp.o: CXX_COMPILER__latticedb_test_Release /workspaces/app/src/telemetry/metrics_collector.cpp || cmake_object_order_depends_target_latticedb_test
+  DEFINES = -DTESTING
+  DEP_FILE = CMakeFiles/latticedb_test.dir/src/telemetry/metrics_collector.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_test.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_test.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_test.dir/
+  TARGET_PDB = latticedb_test.pdb
+
+build CMakeFiles/latticedb_test.dir/src/telemetry/tracer.cpp.o: CXX_COMPILER__latticedb_test_Release /workspaces/app/src/telemetry/tracer.cpp || cmake_object_order_depends_target_latticedb_test
+  DEFINES = -DTESTING
+  DEP_FILE = CMakeFiles/latticedb_test.dir/src/telemetry/tracer.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_test.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_test.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_test.dir/
+  TARGET_PDB = latticedb_test.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target latticedb_test
@@ -1103,7 +1214,7 @@ build CMakeFiles/latticedb_test.dir/src/network/server.cpp.o: CXX_COMPILER__latt
 #############################################
 # Link the executable latticedb_test
 
-build latticedb_test: CXX_EXECUTABLE_LINKER__latticedb_test_Release CMakeFiles/latticedb_test.dir/tests/test_main.cpp.o CMakeFiles/latticedb_test.dir/tests/buffer_pool_test.cpp.o CMakeFiles/latticedb_test.dir/tests/b_plus_tree_test.cpp.o CMakeFiles/latticedb_test.dir/tests/transaction_test.cpp.o CMakeFiles/latticedb_test.dir/tests/storage_test.cpp.o CMakeFiles/latticedb_test.dir/tests/vector_search_test.cpp.o CMakeFiles/latticedb_test.dir/tests/compression_test.cpp.o CMakeFiles/latticedb_test.dir/tests/security_test.cpp.o CMakeFiles/latticedb_test.dir/tests/stream_processing_test.cpp.o CMakeFiles/latticedb_test.dir/src/types/value.cpp.o CMakeFiles/latticedb_test.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_test.dir/src/types/schema.cpp.o CMakeFiles/latticedb_test.dir/src/common/exception.cpp.o CMakeFiles/latticedb_test.dir/src/common/logger.cpp.o CMakeFiles/latticedb_test.dir/src/storage/page.cpp.o CMakeFiles/latticedb_test.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_test.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_test.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_test.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_test.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_test.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_test.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_test.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_test.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_test.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_test.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_test.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_test.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_test.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_test.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_test.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_test.dir/src/network/server.cpp.o
+build latticedb_test: CXX_EXECUTABLE_LINKER__latticedb_test_Release CMakeFiles/latticedb_test.dir/tests/test_main.cpp.o CMakeFiles/latticedb_test.dir/tests/buffer_pool_test.cpp.o CMakeFiles/latticedb_test.dir/tests/b_plus_tree_test.cpp.o CMakeFiles/latticedb_test.dir/tests/transaction_test.cpp.o CMakeFiles/latticedb_test.dir/tests/storage_test.cpp.o CMakeFiles/latticedb_test.dir/tests/vector_search_test.cpp.o CMakeFiles/latticedb_test.dir/tests/compression_test.cpp.o CMakeFiles/latticedb_test.dir/tests/security_test.cpp.o CMakeFiles/latticedb_test.dir/tests/stream_processing_test.cpp.o CMakeFiles/latticedb_test.dir/src/types/value.cpp.o CMakeFiles/latticedb_test.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_test.dir/src/types/schema.cpp.o CMakeFiles/latticedb_test.dir/src/common/exception.cpp.o CMakeFiles/latticedb_test.dir/src/common/logger.cpp.o CMakeFiles/latticedb_test.dir/src/storage/page.cpp.o CMakeFiles/latticedb_test.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_test.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_test.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_test.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_test.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_test.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_test.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_test.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_test.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_test.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_test.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_test.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_test.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_test.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_test.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_test.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_test.dir/src/network/server.cpp.o CMakeFiles/latticedb_test.dir/src/telemetry/telemetry_manager.cpp.o CMakeFiles/latticedb_test.dir/src/telemetry/metrics_collector.cpp.o CMakeFiles/latticedb_test.dir/src/telemetry/tracer.cpp.o
   FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG
   OBJECT_DIR = CMakeFiles/latticedb_test.dir
   POST_BUILD = :
@@ -1337,6 +1448,33 @@ build CMakeFiles/latticedb_bench.dir/src/network/server.cpp.o: CXX_COMPILER__lat
   TARGET_COMPILE_PDB = CMakeFiles/latticedb_bench.dir/
   TARGET_PDB = latticedb_bench.pdb
 
+build CMakeFiles/latticedb_bench.dir/src/telemetry/telemetry_manager.cpp.o: CXX_COMPILER__latticedb_bench_Release /workspaces/app/src/telemetry/telemetry_manager.cpp || cmake_object_order_depends_target_latticedb_bench
+  DEP_FILE = CMakeFiles/latticedb_bench.dir/src/telemetry/telemetry_manager.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_bench.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_bench.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_bench.dir/
+  TARGET_PDB = latticedb_bench.pdb
+
+build CMakeFiles/latticedb_bench.dir/src/telemetry/metrics_collector.cpp.o: CXX_COMPILER__latticedb_bench_Release /workspaces/app/src/telemetry/metrics_collector.cpp || cmake_object_order_depends_target_latticedb_bench
+  DEP_FILE = CMakeFiles/latticedb_bench.dir/src/telemetry/metrics_collector.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_bench.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_bench.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_bench.dir/
+  TARGET_PDB = latticedb_bench.pdb
+
+build CMakeFiles/latticedb_bench.dir/src/telemetry/tracer.cpp.o: CXX_COMPILER__latticedb_bench_Release /workspaces/app/src/telemetry/tracer.cpp || cmake_object_order_depends_target_latticedb_bench
+  DEP_FILE = CMakeFiles/latticedb_bench.dir/src/telemetry/tracer.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/latticedb_bench.dir
+  OBJECT_FILE_DIR = CMakeFiles/latticedb_bench.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/latticedb_bench.dir/
+  TARGET_PDB = latticedb_bench.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target latticedb_bench
@@ -1345,7 +1483,7 @@ build CMakeFiles/latticedb_bench.dir/src/network/server.cpp.o: CXX_COMPILER__lat
 #############################################
 # Link the executable latticedb_bench
 
-build latticedb_bench: CXX_EXECUTABLE_LINKER__latticedb_bench_Release CMakeFiles/latticedb_bench.dir/benchmarks/benchmark_main.cpp.o CMakeFiles/latticedb_bench.dir/src/types/value.cpp.o CMakeFiles/latticedb_bench.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_bench.dir/src/types/schema.cpp.o CMakeFiles/latticedb_bench.dir/src/common/exception.cpp.o CMakeFiles/latticedb_bench.dir/src/common/logger.cpp.o CMakeFiles/latticedb_bench.dir/src/storage/page.cpp.o CMakeFiles/latticedb_bench.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_bench.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_bench.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_bench.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_bench.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_bench.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_bench.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_bench.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_bench.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_bench.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_bench.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_bench.dir/src/network/server.cpp.o
+build latticedb_bench: CXX_EXECUTABLE_LINKER__latticedb_bench_Release CMakeFiles/latticedb_bench.dir/benchmarks/benchmark_main.cpp.o CMakeFiles/latticedb_bench.dir/src/types/value.cpp.o CMakeFiles/latticedb_bench.dir/src/types/tuple.cpp.o CMakeFiles/latticedb_bench.dir/src/types/schema.cpp.o CMakeFiles/latticedb_bench.dir/src/common/exception.cpp.o CMakeFiles/latticedb_bench.dir/src/common/logger.cpp.o CMakeFiles/latticedb_bench.dir/src/storage/page.cpp.o CMakeFiles/latticedb_bench.dir/src/storage/disk_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/storage/table_page.cpp.o CMakeFiles/latticedb_bench.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/buffer/replacer.cpp.o CMakeFiles/latticedb_bench.dir/src/transaction/transaction.cpp.o CMakeFiles/latticedb_bench.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/recovery/log_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/catalog/table_heap.cpp.o CMakeFiles/latticedb_bench.dir/src/query/sql_parser.cpp.o CMakeFiles/latticedb_bench.dir/src/query/query_planner.cpp.o CMakeFiles/latticedb_bench.dir/src/query/query_executor.cpp.o CMakeFiles/latticedb_bench.dir/src/engine/storage_engine.cpp.o CMakeFiles/latticedb_bench.dir/src/engine/database_engine.cpp.o CMakeFiles/latticedb_bench.dir/src/ml/vector_search.cpp.o CMakeFiles/latticedb_bench.dir/src/diagnostics/system_info.cpp.o CMakeFiles/latticedb_bench.dir/src/network/server.cpp.o CMakeFiles/latticedb_bench.dir/src/telemetry/telemetry_manager.cpp.o CMakeFiles/latticedb_bench.dir/src/telemetry/metrics_collector.cpp.o CMakeFiles/latticedb_bench.dir/src/telemetry/tracer.cpp.o
   FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG
   OBJECT_DIR = CMakeFiles/latticedb_bench.dir
   POST_BUILD = :
@@ -1579,6 +1717,33 @@ build CMakeFiles/test_direct.dir/src/network/server.cpp.o: CXX_COMPILER__test_di
   TARGET_COMPILE_PDB = CMakeFiles/test_direct.dir/
   TARGET_PDB = test_direct.pdb
 
+build CMakeFiles/test_direct.dir/src/telemetry/telemetry_manager.cpp.o: CXX_COMPILER__test_direct_Release /workspaces/app/src/telemetry/telemetry_manager.cpp || cmake_object_order_depends_target_test_direct
+  DEP_FILE = CMakeFiles/test_direct.dir/src/telemetry/telemetry_manager.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/test_direct.dir
+  OBJECT_FILE_DIR = CMakeFiles/test_direct.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/test_direct.dir/
+  TARGET_PDB = test_direct.pdb
+
+build CMakeFiles/test_direct.dir/src/telemetry/metrics_collector.cpp.o: CXX_COMPILER__test_direct_Release /workspaces/app/src/telemetry/metrics_collector.cpp || cmake_object_order_depends_target_test_direct
+  DEP_FILE = CMakeFiles/test_direct.dir/src/telemetry/metrics_collector.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/test_direct.dir
+  OBJECT_FILE_DIR = CMakeFiles/test_direct.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/test_direct.dir/
+  TARGET_PDB = test_direct.pdb
+
+build CMakeFiles/test_direct.dir/src/telemetry/tracer.cpp.o: CXX_COMPILER__test_direct_Release /workspaces/app/src/telemetry/tracer.cpp || cmake_object_order_depends_target_test_direct
+  DEP_FILE = CMakeFiles/test_direct.dir/src/telemetry/tracer.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/test_direct.dir
+  OBJECT_FILE_DIR = CMakeFiles/test_direct.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/test_direct.dir/
+  TARGET_PDB = test_direct.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target test_direct
@@ -1587,7 +1752,7 @@ build CMakeFiles/test_direct.dir/src/network/server.cpp.o: CXX_COMPILER__test_di
 #############################################
 # Link the executable test_direct
 
-build test_direct: CXX_EXECUTABLE_LINKER__test_direct_Release CMakeFiles/test_direct.dir/examples/test_direct.cpp.o CMakeFiles/test_direct.dir/src/types/value.cpp.o CMakeFiles/test_direct.dir/src/types/tuple.cpp.o CMakeFiles/test_direct.dir/src/types/schema.cpp.o CMakeFiles/test_direct.dir/src/common/exception.cpp.o CMakeFiles/test_direct.dir/src/common/logger.cpp.o CMakeFiles/test_direct.dir/src/storage/page.cpp.o CMakeFiles/test_direct.dir/src/storage/disk_manager.cpp.o CMakeFiles/test_direct.dir/src/storage/table_page.cpp.o CMakeFiles/test_direct.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/test_direct.dir/src/buffer/replacer.cpp.o CMakeFiles/test_direct.dir/src/transaction/transaction.cpp.o CMakeFiles/test_direct.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/test_direct.dir/src/recovery/log_manager.cpp.o CMakeFiles/test_direct.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/test_direct.dir/src/catalog/table_heap.cpp.o CMakeFiles/test_direct.dir/src/query/sql_parser.cpp.o CMakeFiles/test_direct.dir/src/query/query_planner.cpp.o CMakeFiles/test_direct.dir/src/query/query_executor.cpp.o CMakeFiles/test_direct.dir/src/engine/storage_engine.cpp.o CMakeFiles/test_direct.dir/src/engine/database_engine.cpp.o CMakeFiles/test_direct.dir/src/ml/vector_search.cpp.o CMakeFiles/test_direct.dir/src/diagnostics/system_info.cpp.o CMakeFiles/test_direct.dir/src/network/server.cpp.o
+build test_direct: CXX_EXECUTABLE_LINKER__test_direct_Release CMakeFiles/test_direct.dir/examples/test_direct.cpp.o CMakeFiles/test_direct.dir/src/types/value.cpp.o CMakeFiles/test_direct.dir/src/types/tuple.cpp.o CMakeFiles/test_direct.dir/src/types/schema.cpp.o CMakeFiles/test_direct.dir/src/common/exception.cpp.o CMakeFiles/test_direct.dir/src/common/logger.cpp.o CMakeFiles/test_direct.dir/src/storage/page.cpp.o CMakeFiles/test_direct.dir/src/storage/disk_manager.cpp.o CMakeFiles/test_direct.dir/src/storage/table_page.cpp.o CMakeFiles/test_direct.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/test_direct.dir/src/buffer/replacer.cpp.o CMakeFiles/test_direct.dir/src/transaction/transaction.cpp.o CMakeFiles/test_direct.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/test_direct.dir/src/recovery/log_manager.cpp.o CMakeFiles/test_direct.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/test_direct.dir/src/catalog/table_heap.cpp.o CMakeFiles/test_direct.dir/src/query/sql_parser.cpp.o CMakeFiles/test_direct.dir/src/query/query_planner.cpp.o CMakeFiles/test_direct.dir/src/query/query_executor.cpp.o CMakeFiles/test_direct.dir/src/engine/storage_engine.cpp.o CMakeFiles/test_direct.dir/src/engine/database_engine.cpp.o CMakeFiles/test_direct.dir/src/ml/vector_search.cpp.o CMakeFiles/test_direct.dir/src/diagnostics/system_info.cpp.o CMakeFiles/test_direct.dir/src/network/server.cpp.o CMakeFiles/test_direct.dir/src/telemetry/telemetry_manager.cpp.o CMakeFiles/test_direct.dir/src/telemetry/metrics_collector.cpp.o CMakeFiles/test_direct.dir/src/telemetry/tracer.cpp.o
   FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG
   OBJECT_DIR = CMakeFiles/test_direct.dir
   POST_BUILD = :
@@ -1821,6 +1986,33 @@ build CMakeFiles/comprehensive_test.dir/src/network/server.cpp.o: CXX_COMPILER__
   TARGET_COMPILE_PDB = CMakeFiles/comprehensive_test.dir/
   TARGET_PDB = comprehensive_test.pdb
 
+build CMakeFiles/comprehensive_test.dir/src/telemetry/telemetry_manager.cpp.o: CXX_COMPILER__comprehensive_test_Release /workspaces/app/src/telemetry/telemetry_manager.cpp || cmake_object_order_depends_target_comprehensive_test
+  DEP_FILE = CMakeFiles/comprehensive_test.dir/src/telemetry/telemetry_manager.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/comprehensive_test.dir
+  OBJECT_FILE_DIR = CMakeFiles/comprehensive_test.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/comprehensive_test.dir/
+  TARGET_PDB = comprehensive_test.pdb
+
+build CMakeFiles/comprehensive_test.dir/src/telemetry/metrics_collector.cpp.o: CXX_COMPILER__comprehensive_test_Release /workspaces/app/src/telemetry/metrics_collector.cpp || cmake_object_order_depends_target_comprehensive_test
+  DEP_FILE = CMakeFiles/comprehensive_test.dir/src/telemetry/metrics_collector.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/comprehensive_test.dir
+  OBJECT_FILE_DIR = CMakeFiles/comprehensive_test.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/comprehensive_test.dir/
+  TARGET_PDB = comprehensive_test.pdb
+
+build CMakeFiles/comprehensive_test.dir/src/telemetry/tracer.cpp.o: CXX_COMPILER__comprehensive_test_Release /workspaces/app/src/telemetry/tracer.cpp || cmake_object_order_depends_target_comprehensive_test
+  DEP_FILE = CMakeFiles/comprehensive_test.dir/src/telemetry/tracer.cpp.o.d
+  FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu++17
+  INCLUDES = -I/workspaces/app/src
+  OBJECT_DIR = CMakeFiles/comprehensive_test.dir
+  OBJECT_FILE_DIR = CMakeFiles/comprehensive_test.dir/src/telemetry
+  TARGET_COMPILE_PDB = CMakeFiles/comprehensive_test.dir/
+  TARGET_PDB = comprehensive_test.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target comprehensive_test
@@ -1829,7 +2021,7 @@ build CMakeFiles/comprehensive_test.dir/src/network/server.cpp.o: CXX_COMPILER__
 #############################################
 # Link the executable comprehensive_test
 
-build comprehensive_test: CXX_EXECUTABLE_LINKER__comprehensive_test_Release CMakeFiles/comprehensive_test.dir/test/comprehensive_test.cpp.o CMakeFiles/comprehensive_test.dir/src/types/value.cpp.o CMakeFiles/comprehensive_test.dir/src/types/tuple.cpp.o CMakeFiles/comprehensive_test.dir/src/types/schema.cpp.o CMakeFiles/comprehensive_test.dir/src/common/exception.cpp.o CMakeFiles/comprehensive_test.dir/src/common/logger.cpp.o CMakeFiles/comprehensive_test.dir/src/storage/page.cpp.o CMakeFiles/comprehensive_test.dir/src/storage/disk_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/storage/table_page.cpp.o CMakeFiles/comprehensive_test.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/buffer/replacer.cpp.o CMakeFiles/comprehensive_test.dir/src/transaction/transaction.cpp.o CMakeFiles/comprehensive_test.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/recovery/log_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/catalog/table_heap.cpp.o CMakeFiles/comprehensive_test.dir/src/query/sql_parser.cpp.o CMakeFiles/comprehensive_test.dir/src/query/query_planner.cpp.o CMakeFiles/comprehensive_test.dir/src/query/query_executor.cpp.o CMakeFiles/comprehensive_test.dir/src/engine/storage_engine.cpp.o CMakeFiles/comprehensive_test.dir/src/engine/database_engine.cpp.o CMakeFiles/comprehensive_test.dir/src/ml/vector_search.cpp.o CMakeFiles/comprehensive_test.dir/src/diagnostics/system_info.cpp.o CMakeFiles/comprehensive_test.dir/src/network/server.cpp.o
+build comprehensive_test: CXX_EXECUTABLE_LINKER__comprehensive_test_Release CMakeFiles/comprehensive_test.dir/test/comprehensive_test.cpp.o CMakeFiles/comprehensive_test.dir/src/types/value.cpp.o CMakeFiles/comprehensive_test.dir/src/types/tuple.cpp.o CMakeFiles/comprehensive_test.dir/src/types/schema.cpp.o CMakeFiles/comprehensive_test.dir/src/common/exception.cpp.o CMakeFiles/comprehensive_test.dir/src/common/logger.cpp.o CMakeFiles/comprehensive_test.dir/src/storage/page.cpp.o CMakeFiles/comprehensive_test.dir/src/storage/disk_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/storage/table_page.cpp.o CMakeFiles/comprehensive_test.dir/src/buffer/buffer_pool_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/buffer/replacer.cpp.o CMakeFiles/comprehensive_test.dir/src/transaction/transaction.cpp.o CMakeFiles/comprehensive_test.dir/src/concurrency/lock_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/recovery/log_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/catalog/catalog_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/catalog/table_heap.cpp.o CMakeFiles/comprehensive_test.dir/src/query/sql_parser.cpp.o CMakeFiles/comprehensive_test.dir/src/query/query_planner.cpp.o CMakeFiles/comprehensive_test.dir/src/query/query_executor.cpp.o CMakeFiles/comprehensive_test.dir/src/engine/storage_engine.cpp.o CMakeFiles/comprehensive_test.dir/src/engine/database_engine.cpp.o CMakeFiles/comprehensive_test.dir/src/ml/vector_search.cpp.o CMakeFiles/comprehensive_test.dir/src/diagnostics/system_info.cpp.o CMakeFiles/comprehensive_test.dir/src/network/server.cpp.o CMakeFiles/comprehensive_test.dir/src/telemetry/telemetry_manager.cpp.o CMakeFiles/comprehensive_test.dir/src/telemetry/metrics_collector.cpp.o CMakeFiles/comprehensive_test.dir/src/telemetry/tracer.cpp.o
   FLAGS = -Wall -Wextra -Wpedantic -O3 -DNDEBUG
   OBJECT_DIR = CMakeFiles/comprehensive_test.dir
   POST_BUILD = :
@@ -1940,7 +2132,7 @@ build CMakeFiles/docs | ${cmake_ninja_workdir}CMakeFiles/docs: CUSTOM_COMMAND
 # Custom command for CMakeFiles/format
 
 build CMakeFiles/format | ${cmake_ninja_workdir}CMakeFiles/format: CUSTOM_COMMAND
-  COMMAND = cd /workspaces/app && /usr/bin/clang-format -i -style=file src/types/value.cpp src/types/tuple.cpp src/types/schema.cpp src/common/exception.cpp src/common/logger.cpp src/storage/page.cpp src/storage/disk_manager.cpp src/storage/table_page.cpp src/buffer/buffer_pool_manager.cpp src/buffer/replacer.cpp src/transaction/transaction.cpp src/concurrency/lock_manager.cpp src/recovery/log_manager.cpp src/catalog/catalog_manager.cpp src/catalog/table_heap.cpp src/query/sql_parser.cpp src/query/query_planner.cpp src/query/query_executor.cpp src/engine/storage_engine.cpp src/engine/database_engine.cpp src/ml/vector_search.cpp src/diagnostics/system_info.cpp src/network/server.cpp
+  COMMAND = cd /workspaces/app && /usr/bin/clang-format -i -style=file src/types/value.cpp src/types/tuple.cpp src/types/schema.cpp src/common/exception.cpp src/common/logger.cpp src/storage/page.cpp src/storage/disk_manager.cpp src/storage/table_page.cpp src/buffer/buffer_pool_manager.cpp src/buffer/replacer.cpp src/transaction/transaction.cpp src/concurrency/lock_manager.cpp src/recovery/log_manager.cpp src/catalog/catalog_manager.cpp src/catalog/table_heap.cpp src/query/sql_parser.cpp src/query/query_planner.cpp src/query/query_executor.cpp src/engine/storage_engine.cpp src/engine/database_engine.cpp src/ml/vector_search.cpp src/diagnostics/system_info.cpp src/network/server.cpp src/telemetry/telemetry_manager.cpp src/telemetry/metrics_collector.cpp src/telemetry/tracer.cpp
   DESC = Auto-formatting code with clang-format
 
 # =============================================================================

@@ -1,3 +1,5 @@
+#include <mutex>
+
 // Implementation for compression_engine.h
 #include "compression_engine.h"
 #include <cmath>

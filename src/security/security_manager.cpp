@@ -1,3 +1,7 @@
+#include <shared_mutex>
+
+#include <mutex>
+
 // Implementation for security_manager.h
 #include "security_manager.h"
 #include <random>

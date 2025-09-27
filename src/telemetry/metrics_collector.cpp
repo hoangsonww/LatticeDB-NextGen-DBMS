@@ -82,16 +82,16 @@ void MetricsCollector::initialize() {
                     "%"
                 );
 
-                Logger::info("Metrics collector initialized with OpenTelemetry");
+                Logger::get_instance()->info("Metrics collector initialized with OpenTelemetry");
             }
         } catch (const std::exception& e) {
-            Logger::error("Failed to initialize metrics collector: " + std::string(e.what()));
+            Logger::get_instance()->error("Failed to initialize metrics collector: {}", e.what());
         }
     }
 #endif
 
     initialized_ = true;
-    Logger::info("Metrics collector initialized");
+    Logger::get_instance()->info("Metrics collector initialized");
 }
 
 void MetricsCollector::recordQueryLatency(const std::string& query_type, double latency_ms) {

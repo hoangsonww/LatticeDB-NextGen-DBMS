@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 
 #include "../query/query_executor.h"
 #include "../types/schema.h"
