@@ -27,7 +27,7 @@ graph TB
 
     subgraph "Google Cloud Platform"
         subgraph "Global Load Balancer"
-            LB[HTTP(S) Load Balancer]
+            LB["HTTP(S) Load Balancer"]
             SSL[SSL Certificate]
         end
 

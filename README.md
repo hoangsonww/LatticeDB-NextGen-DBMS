@@ -82,6 +82,7 @@
   - [Test Coverage](#test-coverage)
 - [Benchmarks](#benchmarks)
 - [Deployment](#deployment)
+  - [Built-in Monitoring & Observability](#built-in-monitoring--observability)
   - [Supported Platforms](#supported-platforms)
   - [Quick Deploy](#quick-deploy)
   - [What You Get](#what-you-get)
@@ -693,7 +694,7 @@ Add `-v` to show per-iteration progress and `--vector` to include the optional v
 
 Wanna run LatticeDB in production? No problem! LatticeDB provides **production-ready deployment configurations** for major cloud providers and HashiCorp stack, enabling you to deploy your database with enterprise-grade reliability, security, and scalability.
 
-### 📊 Built-in Monitoring & Observability
+### Built-in Monitoring & Observability
 
 All LatticeDB deployments include **integrated Prometheus and Grafana monitoring** out of the box:
 
@@ -765,6 +766,8 @@ Each deployment provides:
 - **💾 Persistence**: Durable storage with automated backups
 - **🌐 Load Balancing**: High availability with health checks
 - **📱 Management**: Web UIs and CLI tools for operations
+- **🛠️ CI/CD**: Ready for integration with your pipelines
+- **🧩 Extensible**: Customize with Terraform variables and modules
 
 ### Production Features
 
