@@ -33,6 +33,21 @@ if(PkgConfig_FOUND)
     pkg_check_modules(ZSTD QUIET libzstd)
 endif()
 
+# OpenTelemetry dependencies
+option(ENABLE_TELEMETRY "Enable OpenTelemetry support" ON)
+if(ENABLE_TELEMETRY)
+    find_package(opentelemetry-cpp QUIET)
+    if(opentelemetry-cpp_FOUND)
+        set(TELEMETRY_FOUND ON)
+        message(STATUS "OpenTelemetry found, enabling telemetry support")
+    else()
+        message(STATUS "OpenTelemetry not found, building without telemetry")
+        set(TELEMETRY_FOUND OFF)
+    endif()
+else()
+    set(TELEMETRY_FOUND OFF)
+endif()
+
 # Force-disable optional compression to simplify minimal build
 set(LZ4_FOUND OFF)
 set(ZSTD_FOUND OFF)
@@ -87,6 +102,11 @@ set(LATTICEDB_SOURCES
 
     # Network Server
     src/network/server.cpp
+
+    # Telemetry (OpenTelemetry/Jaeger)
+    src/telemetry/telemetry_manager.cpp
+    src/telemetry/metrics_collector.cpp
+    src/telemetry/tracer.cpp
 )
 
 ## NOTE: Stub-generation disabled to preserve implemented sources
@@ -116,6 +136,19 @@ if(ZSTD_FOUND)
     target_compile_definitions(latticedb_cli PRIVATE HAVE_ZSTD)
 endif()
 
+# Link OpenTelemetry libraries if available
+if(TELEMETRY_FOUND)
+    target_link_libraries(latticedb_cli
+        opentelemetry-cpp::api
+        opentelemetry-cpp::sdk
+        opentelemetry-cpp::ext
+        opentelemetry-cpp::exporters::jaeger
+        opentelemetry-cpp::exporters::prometheus
+        opentelemetry-cpp::exporters::otlp
+    )
+    target_compile_definitions(latticedb_cli PRIVATE HAVE_TELEMETRY)
+endif()
+
 # Install target
 install(TARGETS latticedb_cli DESTINATION bin)
 
@@ -133,6 +166,17 @@ if(ZSTD_FOUND)
     target_link_libraries(latticedb_server ${ZSTD_LIBRARIES})
     target_compile_definitions(latticedb_server PRIVATE HAVE_ZSTD)
 endif()
+if(TELEMETRY_FOUND)
+    target_link_libraries(latticedb_server
+        opentelemetry-cpp::api
+        opentelemetry-cpp::sdk
+        opentelemetry-cpp::ext
+        opentelemetry-cpp::exporters::jaeger
+        opentelemetry-cpp::exporters::prometheus
+        opentelemetry-cpp::exporters::otlp
+    )
+    target_compile_definitions(latticedb_server PRIVATE HAVE_TELEMETRY)
+endif()
 
 # Interactive CLI Shell executable
 add_executable(latticedb_shell
@@ -147,6 +191,17 @@ endif()
 if(ZSTD_FOUND)
     target_link_libraries(latticedb_shell ${ZSTD_LIBRARIES})
     target_compile_definitions(latticedb_shell PRIVATE HAVE_ZSTD)
+endif()
+if(TELEMETRY_FOUND)
+    target_link_libraries(latticedb_shell
+        opentelemetry-cpp::api
+        opentelemetry-cpp::sdk
+        opentelemetry-cpp::ext
+        opentelemetry-cpp::exporters::jaeger
+        opentelemetry-cpp::exporters::prometheus
+        opentelemetry-cpp::exporters::otlp
+    )
+    target_compile_definitions(latticedb_shell PRIVATE HAVE_TELEMETRY)
 endif()
 
 # Enable testing
@@ -263,6 +318,7 @@ message(STATUS "  C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "  Compiler: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "  LZ4 Support: ${LZ4_FOUND}")
 message(STATUS "  ZSTD Support: ${ZSTD_FOUND}")
+message(STATUS "  OpenTelemetry Support: ${TELEMETRY_FOUND}")
 message(STATUS "  Install Prefix: ${CMAKE_INSTALL_PREFIX}")
 
 # Create build info file

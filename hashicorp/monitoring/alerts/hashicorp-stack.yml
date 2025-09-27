@@ -1,0 +1,321 @@
+# HashiCorp Stack Alerting Rules
+groups:
+  - name: consul.alerts
+    rules:
+      # Consul cluster health
+      - alert: ConsulClusterDown
+        expr: consul_up == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: consul
+        annotations:
+          summary: "Consul cluster is down"
+          description: "Consul cluster on {{ $labels.instance }} is unreachable"
+          runbook_url: "https://runbooks.latticedb.com/alerts/consul-down"
+
+      - alert: ConsulLeaderElection
+        expr: increase(consul_raft_leader_transitions_total[10m]) > 0
+        labels:
+          severity: warning
+          service: consul
+        annotations:
+          summary: "Consul leader election occurred"
+          description: "Consul cluster experienced {{ $value }} leader transitions in the last 10 minutes"
+          runbook_url: "https://runbooks.latticedb.com/alerts/consul-leader-election"
+
+      - alert: ConsulNodeDown
+        expr: consul_serf_lan_members{status!="alive"} > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: consul
+        annotations:
+          summary: "Consul node is down"
+          description: "Consul node {{ $labels.node }} is not alive (status: {{ $labels.status }})"
+          runbook_url: "https://runbooks.latticedb.com/alerts/consul-node-down"
+
+      - alert: ConsulServiceUnhealthy
+        expr: consul_health_service_status{status!="passing"} > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: consul
+        annotations:
+          summary: "Service health check failing"
+          description: "Service {{ $labels.service_name }} on {{ $labels.node }} is {{ $labels.status }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/service-unhealthy"
+
+      - alert: ConsulRPCLatencyHigh
+        expr: consul_rpc_query_time{quantile="0.9"} > 200
+        for: 10m
+        labels:
+          severity: warning
+          service: consul
+        annotations:
+          summary: "High Consul RPC latency"
+          description: "90th percentile RPC latency is {{ $value }}ms on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/consul-high-latency"
+
+      - alert: ConsulMemoryHigh
+        expr: consul_runtime_sys_bytes > 500000000
+        for: 15m
+        labels:
+          severity: warning
+          service: consul
+        annotations:
+          summary: "High memory usage in Consul"
+          description: "Consul memory usage is {{ $value | humanize1024 }}B on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/consul-high-memory"
+
+  - name: vault.alerts
+    rules:
+      # Vault availability and health
+      - alert: VaultSealed
+        expr: vault_core_sealed == 1
+        for: 0m
+        labels:
+          severity: critical
+          service: vault
+        annotations:
+          summary: "Vault is sealed"
+          description: "Vault instance {{ $labels.instance }} is sealed and cannot serve requests"
+          runbook_url: "https://runbooks.latticedb.com/alerts/vault-sealed"
+
+      - alert: VaultDown
+        expr: up{job="vault"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: vault
+        annotations:
+          summary: "Vault is down"
+          description: "Vault instance {{ $labels.instance }} is unreachable"
+          runbook_url: "https://runbooks.latticedb.com/alerts/vault-down"
+
+      - alert: VaultHighRequestLatency
+        expr: vault_core_handle_request{quantile="0.95"} > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: vault
+        annotations:
+          summary: "High request latency in Vault"
+          description: "95th percentile request latency is {{ $value }}ms on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/vault-high-latency"
+
+      - alert: VaultHighFailureRate
+        expr: rate(vault_audit_log_response{error!=""}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: vault
+        annotations:
+          summary: "High failure rate in Vault"
+          description: "Request failure rate is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/vault-high-failure-rate"
+
+      - alert: VaultTokenLeasesHigh
+        expr: vault_expire_num_leases > 10000
+        for: 15m
+        labels:
+          severity: warning
+          service: vault
+        annotations:
+          summary: "High number of token leases in Vault"
+          description: "{{ $value }} active token leases on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/vault-high-leases"
+
+      - alert: VaultStorageOperationsHigh
+        expr: rate(vault_core_mount_table_num_entries[5m]) > 100
+        for: 10m
+        labels:
+          severity: info
+          service: vault
+        annotations:
+          summary: "High storage operations in Vault"
+          description: "Storage operation rate is {{ $value }}/sec on {{ $labels.instance }}"
+
+      - alert: VaultCertificateExpiringSoon
+        expr: (vault_pki_certificate_expiry_time - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+          service: vault
+        annotations:
+          summary: "Vault certificate expiring soon"
+          description: "Certificate {{ $labels.serial }} expires in {{ $value }} days"
+          runbook_url: "https://runbooks.latticedb.com/alerts/certificate-expiring"
+
+  - name: nomad.alerts
+    rules:
+      # Nomad cluster health
+      - alert: NomadDown
+        expr: up{job="nomad"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: nomad
+        annotations:
+          summary: "Nomad server is down"
+          description: "Nomad server {{ $labels.instance }} is unreachable"
+          runbook_url: "https://runbooks.latticedb.com/alerts/nomad-down"
+
+      - alert: NomadNodeDown
+        expr: nomad_nomad_heartbeat_active == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: nomad
+        annotations:
+          summary: "Nomad client node is down"
+          description: "Nomad client {{ $labels.node_id }} on {{ $labels.instance }} is not heartbeating"
+          runbook_url: "https://runbooks.latticedb.com/alerts/nomad-node-down"
+
+      - alert: NomadJobFailed
+        expr: nomad_nomad_job_summary_failed > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: nomad
+        annotations:
+          summary: "Nomad job has failed allocations"
+          description: "Job {{ $labels.job }} has {{ $value }} failed allocations"
+          runbook_url: "https://runbooks.latticedb.com/alerts/nomad-job-failed"
+
+      - alert: NomadHighResourceUtilization
+        expr: (nomad_client_allocated_cpu / nomad_client_host_cpu_total) > 0.9
+        for: 15m
+        labels:
+          severity: warning
+          service: nomad
+        annotations:
+          summary: "High CPU utilization on Nomad client"
+          description: "CPU utilization is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/nomad-high-cpu"
+
+      - alert: NomadHighMemoryUtilization
+        expr: (nomad_client_allocated_memory / nomad_client_host_memory_total) > 0.9
+        for: 15m
+        labels:
+          severity: warning
+          service: nomad
+        annotations:
+          summary: "High memory utilization on Nomad client"
+          description: "Memory utilization is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/nomad-high-memory"
+
+      - alert: NomadEvalPending
+        expr: nomad_nomad_broker_total_blocked > 10
+        for: 10m
+        labels:
+          severity: warning
+          service: nomad
+        annotations:
+          summary: "Many pending evaluations in Nomad"
+          description: "{{ $value }} evaluations are blocked/pending"
+          runbook_url: "https://runbooks.latticedb.com/alerts/nomad-eval-pending"
+
+      - alert: NomadLeaderElection
+        expr: increase(nomad_nomad_leader_barrier[10m]) > 0
+        labels:
+          severity: info
+          service: nomad
+        annotations:
+          summary: "Nomad leader election occurred"
+          description: "Nomad cluster experienced leader election in the last 10 minutes"
+          runbook_url: "https://runbooks.latticedb.com/alerts/nomad-leader-election"
+
+  - name: service-mesh.alerts
+    rules:
+      # Envoy proxy health
+      - alert: EnvoyProxyDown
+        expr: up{job="envoy-proxy"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: envoy
+        annotations:
+          summary: "Envoy sidecar proxy is down"
+          description: "Envoy proxy {{ $labels.proxy_id }} is unreachable"
+          runbook_url: "https://runbooks.latticedb.com/alerts/envoy-proxy-down"
+
+      - alert: EnvoyHighErrorRate
+        expr: rate(envoy_http_downstream_rq_xx{envoy_response_code=~"5.."}[5m]) / rate(envoy_http_downstream_rq_xx[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: envoy
+        annotations:
+          summary: "High error rate in Envoy proxy"
+          description: "Error rate is {{ $value | humanizePercentage }} for proxy {{ $labels.proxy_id }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/envoy-high-error-rate"
+
+      - alert: EnvoyHighLatency
+        expr: histogram_quantile(0.95, rate(envoy_http_downstream_rq_time_bucket[5m])) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: envoy
+        annotations:
+          summary: "High latency in Envoy proxy"
+          description: "95th percentile latency is {{ $value }}ms for proxy {{ $labels.proxy_id }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/envoy-high-latency"
+
+      - alert: ConsulConnectIntentionDenied
+        expr: rate(envoy_rbac_denied[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: consul-connect
+        annotations:
+          summary: "Service mesh intentions blocking traffic"
+          description: "{{ $value }} requests/sec are being denied by service mesh intentions"
+          runbook_url: "https://runbooks.latticedb.com/alerts/intention-denied"
+
+  - name: infrastructure.alerts
+    rules:
+      # Node-level alerts
+      - alert: HighCPUUsage
+        expr: (100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 15m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High CPU usage on node"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/high-cpu-usage"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High memory usage on node"
+          description: "Available memory is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/high-memory-usage"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Low disk space on node"
+          description: "Available disk space is {{ $value | humanizePercentage }} on {{ $labels.instance }}:{{ $labels.mountpoint }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/low-disk-space"
+
+      - alert: HighDiskIOUtilization
+        expr: rate(node_disk_io_time_seconds_total[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High disk I/O utilization"
+          description: "Disk I/O utilization is {{ $value | humanizePercentage }} on {{ $labels.instance }}:{{ $labels.device }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/high-disk-io"

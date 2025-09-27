@@ -1,0 +1,88 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'latticedb'
+          static_configs:
+            - targets: ['latticedb:8080']
+          metrics_path: '/metrics'
+          scrape_interval: 15s
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  resource:
+    attributes:
+      - key: service.name
+        value: "latticedb"
+        action: upsert
+      - key: service.version
+        value: "2.0.0"
+        action: upsert
+      - key: deployment.environment
+        value: "development"
+        action: upsert
+
+  # Add sampling for high-volume traces
+  probabilistic_sampler:
+    sampling_percentage: 100  # Sample 100% in dev, reduce in production
+
+exporters:
+  # Jaeger for traces
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+
+  # Prometheus for metrics
+  prometheus:
+    endpoint: "0.0.0.0:8888"
+    namespace: "latticedb"
+    const_labels:
+      environment: "development"
+
+  # OTLP for traces and metrics (can be used for other backends)
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  # Logging for debugging
+  logging:
+    loglevel: info
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource, probabilistic_sampler, batch]
+      exporters: [jaeger, logging]
+
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [resource, batch]
+      exporters: [prometheus]
+
+  telemetry:
+    logs:
+      level: "info"
+    metrics:
+      address: 0.0.0.0:8888

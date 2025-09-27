@@ -1,0 +1,143 @@
+{
+  "services": [
+    {
+      "id": "latticedb-http",
+      "name": "latticedb",
+      "tags": [
+        "database",
+        "http",
+        "api",
+        "v1",
+        "urlprefix-/api strip=/api",
+        "traefik.enable=true",
+        "traefik.http.routers.latticedb.rule=Host(`latticedb.service.consul`)",
+        "traefik.http.routers.latticedb.tls=true"
+      ],
+      "address": "127.0.0.1",
+      "port": 8080,
+      "meta": {
+        "version": "1.0.0",
+        "protocol": "http",
+        "environment": "production",
+        "datacenter": "dc1"
+      },
+      "check": {
+        "id": "latticedb-http-health",
+        "name": "LatticeDB HTTP Health Check",
+        "http": "http://127.0.0.1:8080/health",
+        "method": "GET",
+        "interval": "10s",
+        "timeout": "3s",
+        "status": "passing",
+        "notes": "HTTP health check for LatticeDB API endpoint"
+      },
+      "checks": [
+        {
+          "id": "latticedb-http-ready",
+          "name": "LatticeDB HTTP Readiness Check",
+          "http": "http://127.0.0.1:8080/ready",
+          "method": "GET",
+          "interval": "30s",
+          "timeout": "5s",
+          "status": "passing",
+          "notes": "HTTP readiness check for LatticeDB service"
+        },
+        {
+          "id": "latticedb-http-metrics",
+          "name": "LatticeDB Metrics Check",
+          "http": "http://127.0.0.1:8080/metrics",
+          "method": "GET",
+          "interval": "60s",
+          "timeout": "10s",
+          "status": "warning",
+          "notes": "Metrics endpoint availability check"
+        }
+      ]
+    },
+    {
+      "id": "latticedb-sql",
+      "name": "latticedb-sql",
+      "tags": [
+        "database",
+        "sql",
+        "postgres-compatible",
+        "tcp"
+      ],
+      "address": "127.0.0.1",
+      "port": 5432,
+      "meta": {
+        "version": "1.0.0",
+        "protocol": "postgresql",
+        "environment": "production",
+        "datacenter": "dc1",
+        "compatibility": "postgres-13"
+      },
+      "check": {
+        "id": "latticedb-sql-tcp",
+        "name": "LatticeDB SQL Port Check",
+        "tcp": "127.0.0.1:5432",
+        "interval": "10s",
+        "timeout": "3s",
+        "status": "passing",
+        "notes": "TCP connectivity check for SQL port"
+      }
+    },
+    {
+      "id": "latticedb-admin",
+      "name": "latticedb-admin",
+      "tags": [
+        "admin",
+        "management",
+        "ui",
+        "internal"
+      ],
+      "address": "127.0.0.1",
+      "port": 8081,
+      "meta": {
+        "version": "1.0.0",
+        "protocol": "http",
+        "environment": "production",
+        "access": "internal-only"
+      },
+      "check": {
+        "id": "latticedb-admin-health",
+        "name": "LatticeDB Admin Interface Check",
+        "http": "http://127.0.0.1:8081/admin/health",
+        "method": "GET",
+        "interval": "30s",
+        "timeout": "5s",
+        "status": "passing",
+        "notes": "Admin interface health check"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "id": "latticedb-disk-usage",
+      "name": "LatticeDB Disk Usage",
+      "script": "/opt/latticedb/scripts/check-disk.sh",
+      "interval": "60s",
+      "timeout": "10s",
+      "status": "passing",
+      "notes": "Monitor disk usage for LatticeDB data directory"
+    },
+    {
+      "id": "latticedb-memory-usage",
+      "name": "LatticeDB Memory Usage",
+      "script": "/opt/latticedb/scripts/check-memory.sh",
+      "interval": "30s",
+      "timeout": "5s",
+      "status": "passing",
+      "notes": "Monitor memory usage for LatticeDB process"
+    },
+    {
+      "id": "latticedb-log-errors",
+      "name": "LatticeDB Log Error Count",
+      "script": "/opt/latticedb/scripts/check-logs.sh",
+      "interval": "300s",
+      "timeout": "15s",
+      "status": "warning",
+      "notes": "Check for error patterns in LatticeDB logs"
+    }
+  ]
+}

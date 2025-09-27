@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'latticedb-gcp'
+    environment: '${environment}'
+    project: '${project_id}'
+
+scrape_configs:
+  # LatticeDB application metrics
+  - job_name: 'latticedb'
+    static_configs:
+      - targets: ['${project_id}-${environment}.run.app:443']
+    metrics_path: '/metrics'
+    scheme: 'https'
+    scrape_interval: 10s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Google Cloud Monitoring metrics
+  - job_name: 'gcp-monitoring'
+    static_configs:
+      - targets: ['monitoring.googleapis.com:443']
+    scheme: 'https'
+    scrape_interval: 60s
+
+recording_rules:
+  - name: latticedb.rules
+    rules:
+      - record: latticedb:request_rate
+        expr: rate(http_requests_total{job="latticedb"}[5m])
+
+      - record: latticedb:error_rate
+        expr: rate(http_requests_total{job="latticedb",status=~"5.."}[5m])
+
+      - record: latticedb:response_time_p95
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="latticedb"}[5m]))
+
+      - record: latticedb:cloud_run_cpu_utilization
+        expr: avg(gcp_cloud_run_container_cpu_utilizations)
+
+      - record: latticedb:cloud_run_memory_utilization
+        expr: avg(gcp_cloud_run_container_memory_utilizations)

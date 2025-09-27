@@ -1,0 +1,217 @@
+language: cpp
+dist: ubuntu-20.04
+sudo: required
+
+services:
+  - docker
+
+branches:
+  only:
+    - master
+    - main
+    - develop
+    - /^release\/.*$/
+    - /^hotfix\/.*$/
+
+env:
+  global:
+    - DOCKER_COMPOSE_VERSION=2.20.0
+    - IMAGE_TAG=${TRAVIS_COMMIT::8}
+    - PROJECT_NAME=latticedb
+    - BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+    - VCS_REF=${TRAVIS_COMMIT}
+
+matrix:
+  include:
+    # Build and test stage
+    - stage: "Build and Test"
+      name: "Build LatticeDB"
+      compiler: clang
+      addons:
+        apt:
+          packages:
+            - clang-12
+            - cmake
+            - ninja-build
+            - liblz4-dev
+            - libzstd-dev
+            - pkg-config
+      before_script:
+        - export CC=clang-12
+        - export CXX=clang++-12
+      script:
+        - mkdir build
+        - cd build
+        - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+        - ninja
+        - ninja test
+      after_success:
+        - echo "Build completed successfully"
+
+    # Docker build stage
+    - stage: "Docker Build"
+      name: "Build Docker Image"
+      script:
+        - docker build -t $PROJECT_NAME:$IMAGE_TAG
+          --build-arg BUILD_DATE="$BUILD_DATE"
+          --build-arg VCS_REF="$VCS_REF" .
+        - docker images
+        - echo "Docker image built successfully"
+
+    # Multi-cloud deployment stage
+    - stage: "Deploy"
+      name: "Deploy to AWS"
+      if: branch = master AND type = push
+      env:
+        - DEPLOYMENT_TARGET=aws
+      before_script:
+        - pip install --user awscli
+        - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        - sudo apt-get update && sudo apt-get install terraform
+      script:
+        - aws --version
+        - terraform --version
+        - cd aws
+        - terraform init -backend-config="bucket=$TF_STATE_BUCKET" -backend-config="key=latticedb/terraform.tfstate" -backend-config="region=$AWS_DEFAULT_REGION"
+        - terraform plan -var="aws_region=$AWS_DEFAULT_REGION" -var="environment=production" -var="image_tag=$IMAGE_TAG"
+        - terraform apply -auto-approve -var="aws_region=$AWS_DEFAULT_REGION" -var="environment=production" -var="image_tag=$IMAGE_TAG"
+      after_script:
+        - echo "AWS deployment completed"
+
+    - stage: "Deploy"
+      name: "Deploy to Azure"
+      if: branch = master AND type = push
+      env:
+        - DEPLOYMENT_TARGET=azure
+      before_script:
+        - curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+        - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        - sudo apt-get update && sudo apt-get install terraform
+      script:
+        - az --version
+        - terraform --version
+        - az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+        - cd azure
+        - terraform init -backend-config="resource_group_name=$AZURE_RESOURCE_GROUP" -backend-config="storage_account_name=$AZURE_STORAGE_ACCOUNT" -backend-config="container_name=tfstate" -backend-config="key=latticedb.terraform.tfstate"
+        - terraform plan -var="azure_location=$AZURE_LOCATION" -var="environment=production" -var="image_tag=$IMAGE_TAG"
+        - terraform apply -auto-approve -var="azure_location=$AZURE_LOCATION" -var="environment=production" -var="image_tag=$IMAGE_TAG"
+      after_script:
+        - echo "Azure deployment completed"
+
+    - stage: "Deploy"
+      name: "Deploy to GCP"
+      if: branch = master AND type = push
+      env:
+        - DEPLOYMENT_TARGET=gcp
+      before_script:
+        - echo $GCLOUD_SERVICE_KEY | base64 --decode > ${HOME}/gcloud-service-key.json
+        - curl https://sdk.cloud.google.com | bash > /dev/null
+        - source $HOME/google-cloud-sdk/path.bash.inc
+        - gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+        - gcloud config set project $GOOGLE_PROJECT_ID
+        - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        - sudo apt-get update && sudo apt-get install terraform
+      script:
+        - gcloud --version
+        - terraform --version
+        - cd gcp
+        - terraform init -backend-config="bucket=$GCP_TF_STATE_BUCKET" -backend-config="prefix=latticedb/terraform.tfstate"
+        - terraform plan -var="project_id=$GOOGLE_PROJECT_ID" -var="gcp_region=$GCP_REGION" -var="environment=production" -var="image_tag=$IMAGE_TAG"
+        - terraform apply -auto-approve -var="project_id=$GOOGLE_PROJECT_ID" -var="gcp_region=$GCP_REGION" -var="environment=production" -var="image_tag=$IMAGE_TAG"
+      after_script:
+        - echo "GCP deployment completed"
+
+    - stage: "Deploy"
+      name: "Deploy to HashiCorp Stack"
+      if: branch = master AND type = push
+      env:
+        - DEPLOYMENT_TARGET=hashicorp
+      before_script:
+        - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        - sudo apt-get update && sudo apt-get install consul vault nomad terraform
+      script:
+        - consul --version
+        - vault --version
+        - nomad --version
+        - terraform --version
+        - cd hashicorp
+        - terraform init -backend-config="address=$CONSUL_HTTP_ADDR" -backend-config="path=terraform/latticedb"
+        - terraform plan -var="consul_address=$CONSUL_HTTP_ADDR" -var="vault_address=$VAULT_ADDR" -var="nomad_address=$NOMAD_ADDR" -var="environment=production" -var="image_tag=$IMAGE_TAG"
+        - terraform apply -auto-approve -var="consul_address=$CONSUL_HTTP_ADDR" -var="vault_address=$VAULT_ADDR" -var="nomad_address=$NOMAD_ADDR" -var="environment=production" -var="image_tag=$IMAGE_TAG"
+      after_script:
+        - echo "HashiCorp stack deployment completed"
+
+    # Security scanning
+    - stage: "Security"
+      name: "Security Scan"
+      if: branch = master OR branch = develop
+      script:
+        - docker run --rm -v "$PWD":/src -w /src securecodewarrior/docker-image-scanner
+        - echo "Security scan completed"
+
+    # Performance testing (staging deployments)
+    - stage: "Performance Test"
+      name: "Load Testing"
+      if: branch = develop AND type = push
+      env:
+        - DEPLOYMENT_TARGET=staging
+      script:
+        - docker run --rm -v "$PWD":/workspace -w /workspace loadimpact/k6 run tests/load-test.js
+        - echo "Performance test completed"
+
+# Notifications
+notifications:
+  email:
+    recipients:
+      - devops@yourcompany.com
+    on_success: change
+    on_failure: always
+
+  slack:
+    secure: # Add your encrypted Slack webhook
+    rooms:
+      - "#devops"
+      - "#latticedb"
+    on_success: change
+    on_failure: always
+    template:
+      - "Build %{result} for %{repository_name}/%{branch} (%{commit})"
+      - "Duration: %{duration}"
+      - "Build details: %{build_url}"
+
+# Cache dependencies
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/google-cloud-sdk/
+    - node_modules
+    - /var/cache/apt
+
+# Before install - setup environment
+before_install:
+  - echo "Setting up environment for LatticeDB CI/CD"
+  - docker --version
+  - docker-compose --version
+
+# Global script commands
+install:
+  - echo "Installing dependencies"
+
+# After success commands
+after_success:
+  - echo "Build pipeline completed successfully"
+  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+
+# After failure commands
+after_failure:
+  - echo "Build pipeline failed"
+  - docker logs $(docker ps -a -q --filter "ancestor=$PROJECT_NAME:$IMAGE_TAG") || true
+
+# Cleanup
+after_script:
+  - echo "Cleaning up resources"
+  - docker system prune -f || true

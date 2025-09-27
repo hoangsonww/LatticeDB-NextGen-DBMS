@@ -1,0 +1,256 @@
+# HashiCorp Stack optimized Dockerfile for LatticeDB
+FROM ubuntu:24.04
+
+LABEL maintainer="LatticeDB Team"
+LABEL description="LatticeDB DBMS - HashiCorp Stack optimized"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LATTICEDB_ENV=production
+ENV PORT=8080
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        ninja-build \
+        liblz4-dev \
+        libzstd-dev \
+        libreadline-dev \
+        pkg-config \
+        curl \
+        ca-certificates \
+        jq \
+        unzip \
+        dumb-init \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Consul template for dynamic configuration
+RUN CONSUL_TEMPLATE_VERSION=0.32.0 \
+    && curl -Lo /tmp/consul-template.zip https://releases.hashicorp.com/consul-template/${CONSUL_TEMPLATE_VERSION}/consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip \
+    && unzip /tmp/consul-template.zip -d /usr/local/bin/ \
+    && rm /tmp/consul-template.zip \
+    && chmod +x /usr/local/bin/consul-template
+
+# Create app user for security
+RUN groupadd -r latticedb && useradd -r -g latticedb latticedb
+
+# Create necessary directories
+RUN mkdir -p /app /var/lib/latticedb /var/log/latticedb /etc/latticedb/config /etc/latticedb/ssl \
+    && chown -R latticedb:latticedb /app /var/lib/latticedb /var/log/latticedb /etc/latticedb
+
+WORKDIR /app
+
+# Copy source code
+COPY --chown=latticedb:latticedb . .
+
+# Build the application
+RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build --config Release \
+    && chmod +x build/latticedb* \
+    && strip build/latticedb*
+
+# Create health check script
+RUN cat > /app/healthcheck.sh << 'EOF'
+#!/bin/bash
+# Health check script with Consul integration
+set -e
+
+# Check HTTP endpoint
+if ! curl -sf http://localhost:${PORT:-8080}/health > /dev/null; then
+    echo "Health check failed"
+    exit 1
+fi
+
+# Check if registered with Consul (if available)
+if command -v consul >/dev/null 2>&1 && [ -n "${CONSUL_HTTP_ADDR:-}" ]; then
+    if ! consul catalog service latticedb >/dev/null 2>&1; then
+        echo "Not registered with Consul"
+        exit 1
+    fi
+fi
+
+echo "Health check passed"
+EOF
+
+RUN chmod +x /app/healthcheck.sh
+
+# Create startup script with HashiCorp integrations
+RUN cat > /app/start.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Starting LatticeDB with HashiCorp integrations..."
+
+# Wait for Consul to be available
+if [ -n "${CONSUL_HTTP_ADDR:-}" ]; then
+    echo "Waiting for Consul..."
+    while ! curl -sf "${CONSUL_HTTP_ADDR}/v1/status/leader" > /dev/null 2>&1; do
+        sleep 2
+    done
+    echo "Consul is available"
+fi
+
+# Wait for Vault to be available
+if [ -n "${VAULT_ADDR:-}" ]; then
+    echo "Waiting for Vault..."
+    while ! curl -sf "${VAULT_ADDR}/v1/sys/health" > /dev/null 2>&1; do
+        sleep 2
+    done
+    echo "Vault is available"
+fi
+
+# Start consul-template in background for dynamic configuration
+if [ -f /etc/consul-template/config.hcl ] && command -v consul-template >/dev/null 2>&1; then
+    echo "Starting consul-template for dynamic configuration..."
+    consul-template -config=/etc/consul-template/config.hcl &
+    CONSUL_TEMPLATE_PID=$!
+
+    # Function to cleanup consul-template on exit
+    cleanup() {
+        if [ -n "${CONSUL_TEMPLATE_PID:-}" ]; then
+            kill $CONSUL_TEMPLATE_PID 2>/dev/null || true
+        fi
+    }
+    trap cleanup EXIT
+fi
+
+# Register with Consul on startup (if not using Nomad service registration)
+if [ -n "${CONSUL_HTTP_ADDR:-}" ] && [ "${NOMAD_ALLOC_ID:-}" = "" ]; then
+    echo "Registering with Consul..."
+    cat > /tmp/service.json << EOL
+{
+  "ID": "latticedb-${HOSTNAME}",
+  "Name": "latticedb",
+  "Tags": ["database", "http", "${LATTICEDB_ENV:-production}"],
+  "Address": "${NOMAD_IP_http:-127.0.0.1}",
+  "Port": ${PORT:-8080},
+  "Check": {
+    "HTTP": "http://${NOMAD_IP_http:-127.0.0.1}:${PORT:-8080}/health",
+    "Interval": "10s"
+  }
+}
+EOL
+    curl -X PUT "${CONSUL_HTTP_ADDR}/v1/agent/service/register" -d @/tmp/service.json
+fi
+
+# Start the application
+echo "Starting LatticeDB..."
+exec "$@"
+EOF
+
+RUN chmod +x /app/start.sh
+
+# Create consul-template configuration
+RUN mkdir -p /etc/consul-template
+
+RUN cat > /etc/consul-template/config.hcl << 'EOF'
+consul {
+  address = "{{ env "CONSUL_HTTP_ADDR" }}"
+  retry {
+    enabled = true
+    attempts = 12
+    backoff = "250ms"
+    max_backoff = "1m"
+  }
+}
+
+vault {
+  address = "{{ env "VAULT_ADDR" }}"
+  retry {
+    enabled = true
+    attempts = 5
+  }
+}
+
+template {
+  source = "/etc/consul-template/latticedb.conf.tpl"
+  destination = "/etc/latticedb/config/latticedb.conf"
+  command = "pkill -SIGHUP latticedb || true"
+  perms = 0644
+}
+
+template {
+  source = "/etc/consul-template/ssl-cert.tpl"
+  destination = "/etc/latticedb/ssl/cert.pem"
+  command = "pkill -SIGHUP latticedb || true"
+  perms = 0600
+}
+
+template {
+  source = "/etc/consul-template/ssl-key.tpl"
+  destination = "/etc/latticedb/ssl/key.pem"
+  command = "pkill -SIGHUP latticedb || true"
+  perms = 0600
+}
+EOF
+
+# Create configuration templates
+RUN cat > /etc/consul-template/latticedb.conf.tpl << 'EOF'
+# LatticeDB Configuration - Generated by consul-template
+{{- with secret "secret/data/latticedb/{{ env "LATTICEDB_ENV" }}/config" }}
+[server]
+listen_address = "0.0.0.0"
+http_port = {{ env "PORT" }}
+sql_port = 5432
+health_port = 8081
+
+[cluster]
+name = "{{ .Data.data.cluster_name }}"
+node_id = "{{ env "NOMAD_ALLOC_ID" }}"
+
+[storage]
+data_directory = "/var/lib/latticedb"
+backup_enabled = {{ .Data.data.backup_enabled }}
+backup_interval = "{{ .Data.data.backup_interval }}"
+
+[logging]
+level = "{{ .Data.data.log_level }}"
+format = "json"
+output = "stdout"
+
+{{- with secret "secret/data/latticedb/{{ env "LATTICEDB_ENV" }}/ssl" }}
+[security]
+tls_enabled = {{ .Data.data.tls_enabled }}
+tls_cert_file = "/etc/latticedb/ssl/cert.pem"
+tls_key_file = "/etc/latticedb/ssl/key.pem"
+{{- end }}
+
+[consul]
+enabled = true
+address = "{{ env "CONSUL_HTTP_ADDR" }}"
+service_name = "latticedb"
+
+[vault]
+enabled = true
+address = "{{ env "VAULT_ADDR" }}"
+{{- end }}
+EOF
+
+RUN cat > /etc/consul-template/ssl-cert.tpl << 'EOF'
+{{- with secret "pki_int/issue/latticedb" "common_name=latticedb.service.consul" "ttl=24h" }}
+{{ .Data.certificate }}
+{{- end }}
+EOF
+
+RUN cat > /etc/consul-template/ssl-key.tpl << 'EOF'
+{{- with secret "pki_int/issue/latticedb" "common_name=latticedb.service.consul" "ttl=24h" }}
+{{ .Data.private_key }}
+{{- end }}
+EOF
+
+# Switch to non-root user
+USER latticedb
+
+# Expose ports
+EXPOSE 8080 5432 8081
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD /app/healthcheck.sh
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+# Start with our initialization script
+CMD ["/app/start.sh", "./build/latticedb", "--config=/etc/latticedb/config/latticedb.conf"]

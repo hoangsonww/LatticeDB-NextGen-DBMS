@@ -1,0 +1,57 @@
+# Azure-optimized Dockerfile for LatticeDB
+FROM ubuntu:24.04
+
+LABEL maintainer="LatticeDB Team"
+LABEL description="LatticeDB DBMS - Azure Container Apps optimized"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LATTICEDB_ENV=production
+ENV PORT=8080
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        ninja-build \
+        liblz4-dev \
+        libzstd-dev \
+        libreadline-dev \
+        pkg-config \
+        curl \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user for security
+RUN groupadd -r latticedb && useradd -r -g latticedb latticedb
+
+# Create necessary directories
+RUN mkdir -p /app /var/lib/latticedb /var/log/latticedb \
+    && chown -R latticedb:latticedb /app /var/lib/latticedb /var/log/latticedb
+
+WORKDIR /app
+
+# Copy source code
+COPY --chown=latticedb:latticedb . .
+
+# Build the application
+RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build --config Release \
+    && chmod +x build/latticedb*
+
+# Health check script
+RUN echo '#!/bin/bash\ncurl -f http://localhost:$PORT/health || exit 1' > /app/healthcheck.sh \
+    && chmod +x /app/healthcheck.sh
+
+# Switch to non-root user
+USER latticedb
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD /app/healthcheck.sh
+
+# Start the application
+CMD ["./build/latticedb", "--port=8080", "--log-level=info"]
