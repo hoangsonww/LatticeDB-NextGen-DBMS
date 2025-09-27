@@ -1,0 +1,195 @@
+# LatticeDB Alerting Rules
+groups:
+  - name: latticedb.alerts
+    rules:
+      # High-level service availability
+      - alert: LatticeDBServiceDown
+        expr: up{job="latticedb"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: latticedb
+        annotations:
+          summary: "LatticeDB service is down"
+          description: "LatticeDB service {{ $labels.instance }} has been down for more than 30 seconds"
+          runbook_url: "https://runbooks.latticedb.com/alerts/service-down"
+
+      - alert: LatticeDBHighErrorRate
+        expr: latticedb:error_rate > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "High error rate in LatticeDB"
+          description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/high-error-rate"
+
+      - alert: LatticeDBHighLatency
+        expr: latticedb:response_time_p95 > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "High response latency in LatticeDB"
+          description: "95th percentile latency is {{ $value }}s on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/high-latency"
+
+      # Resource utilization
+      - alert: LatticeDBHighCPUUsage
+        expr: latticedb:cpu_usage > 0.8
+        for: 15m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "High CPU usage in LatticeDB"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/high-cpu"
+
+      - alert: LatticeDBHighMemoryUsage
+        expr: (latticedb:memory_usage / 1024 / 1024 / 1024) > 1.5
+        for: 10m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "High memory usage in LatticeDB"
+          description: "Memory usage is {{ $value | humanize }}GB on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/high-memory"
+
+      # Database-specific alerts
+      - alert: LatticeDBConnectionPoolExhaustion
+        expr: latticedb_connection_pool_active / latticedb_connection_pool_max > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "Connection pool near exhaustion"
+          description: "Connection pool usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/connection-pool"
+
+      - alert: LatticeDBSlowQueries
+        expr: latticedb_slow_queries_total > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "High number of slow queries"
+          description: "{{ $value }} slow queries detected on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/slow-queries"
+
+      - alert: LatticeDBDiskSpaceLow
+        expr: (latticedb_disk_free_bytes / latticedb_disk_total_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: latticedb
+        annotations:
+          summary: "Low disk space on LatticeDB"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/low-disk-space"
+
+      # Cluster health
+      - alert: LatticeDBClusterSplitBrain
+        expr: count(latticedb_cluster_leader{status="leader"}) > 1
+        for: 1m
+        labels:
+          severity: critical
+          service: latticedb
+        annotations:
+          summary: "LatticeDB cluster split-brain detected"
+          description: "Multiple leaders detected in LatticeDB cluster"
+          runbook_url: "https://runbooks.latticedb.com/alerts/split-brain"
+
+      - alert: LatticeDBClusterNoLeader
+        expr: count(latticedb_cluster_leader{status="leader"}) == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: latticedb
+        annotations:
+          summary: "No leader in LatticeDB cluster"
+          description: "LatticeDB cluster has no active leader"
+          runbook_url: "https://runbooks.latticedb.com/alerts/no-leader"
+
+      - alert: LatticeDBReplicationLag
+        expr: latticedb_replication_lag_seconds > 60
+        for: 5m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "High replication lag in LatticeDB"
+          description: "Replication lag is {{ $value }}s on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/replication-lag"
+
+      # Backup and recovery
+      - alert: LatticeDBBackupFailed
+        expr: time() - latticedb_last_successful_backup_timestamp > 86400
+        for: 1h
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "LatticeDB backup is overdue"
+          description: "Last successful backup was {{ $value | humanizeDuration }} ago"
+          runbook_url: "https://runbooks.latticedb.com/alerts/backup-failed"
+
+      - alert: LatticeDBBackupSize
+        expr: latticedb_backup_size_bytes < latticedb_data_size_bytes * 0.5
+        for: 30m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "LatticeDB backup size suspicious"
+          description: "Backup size ({{ $value | humanize1024 }}B) is much smaller than data size"
+          runbook_url: "https://runbooks.latticedb.com/alerts/backup-size"
+
+  - name: latticedb.business
+    rules:
+      # Business logic alerts
+      - alert: LatticeDBHighTransactionRate
+        expr: rate(latticedb_transactions_total[5m]) > 1000
+        for: 10m
+        labels:
+          severity: info
+          service: latticedb
+        annotations:
+          summary: "High transaction rate in LatticeDB"
+          description: "Transaction rate is {{ $value }} TPS on {{ $labels.instance }}"
+
+      - alert: LatticeDBLowTransactionRate
+        expr: rate(latticedb_transactions_total[5m]) < 1
+        for: 30m
+        labels:
+          severity: warning
+          service: latticedb
+        annotations:
+          summary: "Low transaction rate in LatticeDB"
+          description: "Transaction rate is only {{ $value }} TPS on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.latticedb.com/alerts/low-transaction-rate"
+
+      - alert: LatticeDBTableGrowth
+        expr: increase(latticedb_table_size_bytes[1h]) > 1000000000
+        for: 0m
+        labels:
+          severity: info
+          service: latticedb
+        annotations:
+          summary: "Rapid table growth in LatticeDB"
+          description: "Table {{ $labels.table }} grew by {{ $value | humanize1024 }}B in the last hour"
+
+      - alert: LatticeDBUnusualQueryPattern
+        expr: rate(latticedb_queries_total{type="select"}[5m]) / rate(latticedb_queries_total{type="insert"}[5m]) > 100
+        for: 15m
+        labels:
+          severity: info
+          service: latticedb
+        annotations:
+          summary: "Unusual query pattern detected"
+          description: "SELECT to INSERT ratio is unusually high: {{ $value }}"

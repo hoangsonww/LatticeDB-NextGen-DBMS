@@ -35,6 +35,20 @@
 [![React](https://img.shields.io/badge/React-GUI-61DAFB?logo=react&logoColor=black&style=for-the-badge)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Frontend-3178C6?logo=typescript&logoColor=white&style=for-the-badge)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Styling-06B6D4?logo=tailwindcss&logoColor=white&style=for-the-badge)](https://tailwindcss.com/)
+[![Travis CI](https://img.shields.io/badge/Travis%20CI-CI/CD-3EAAAF?logo=travisci&logoColor=white&style=for-the-badge)](https://travis-ci.com/)
+[![Jenkins](https://img.shields.io/badge/Jenkins-CI/CD-D24939?logo=jenkins&logoColor=white&style=for-the-badge)](https://www.jenkins.io/)
+[![Terraform](https://img.shields.io/badge/Terraform-IaC-623CE4?logo=terraform&logoColor=white&style=for-the-badge)](https://www.terraform.io/)
+[![AWS](https://img.shields.io/badge/AWS-Deployment-232F3E?logo=amazonaws&logoColor=white&style=for-the-badge)](https://aws.amazon.com/)
+[![Azure](https://img.shields.io/badge/Azure-Deployment-0089D6?logo=microsoftazure&logoColor=white&style=for-the-badge)](https://azure.microsoft.com/)
+[![GCP](https://img.shields.io/badge/GCP-Deployment-4285F4?logo=googlecloud&logoColor=white&style=for-the-badge)](https://cloud.google.com/)
+[![Nomad](https://img.shields.io/badge/Nomad-Orchestration-4A4A4A?logo=hashicorp&logoColor=white&style=for-the-badge)](https://www.nomadproject.io/)
+[![Consul](https://img.shields.io/badge/Consul-Service%20Mesh-4A4A4A?logo=hashicorp&logoColor=white&style=for-the-badge)](https://www.consul.io/)
+[![Vault](https://img.shields.io/badge/Vault-Secrets%20Management-4A4A4A?logo=hashicorp&logoColor=white&style=for-the-badge)](https://www.vaultproject.io/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white&style=for-the-badge)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?logo=grafana&logoColor=white&style=for-the-badge)](https://grafana.com/)
+[![Jaeger](https://img.shields.io/badge/Jaeger-Tracing-EC4815?logo=jaeger&logoColor=white&style=for-the-badge)](https://www.jaegertracing.io/)
+[![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Observability-4EAA25?logo=opentelemetry&logoColor=white&style=for-the-badge)](https://opentelemetry.io/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI/CD-2088FF?logo=githubactions&logoColor=white&style=for-the-badge)](https://docs.github.com/en/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3DA639?logo=open-source-initiative&logoColor=white&style=for-the-badge)](LICENSE)
 
 ## Table of Contents
@@ -67,6 +81,14 @@
   - [Core Components](#core-components)
   - [Test Coverage](#test-coverage)
 - [Benchmarks](#benchmarks)
+- [Deployment](#deployment)
+  - [Supported Platforms](#supported-platforms)
+  - [Quick Deploy](#quick-deploy)
+  - [What You Get](#what-you-get)
+  - [Production Features](#production-features)
+  - [Example: Deploy to AWS](#example-deploy-to-aws)
+  - [CI/CD Integration](#cicd-integration)
+- [GitHub Actions](#github-actions)
 - [Contributing](#contributing)
 - [License](#license)
 - [Appendix: Glossary](#appendix-glossary)
@@ -173,9 +195,9 @@ flowchart TD
 
 * C++17 toolchain (clang++/g++)
 * CMake ≥ 3.15
-* Linux/macOS/WSL2 (for now)
-* Optional: Python 3.x to run simple workload scripts
-* Recommended: VS Code with Dev Containers for easy setup
+* Linux/macOS/WSL2
+* **Optional**: Python 3.x to run simple workload scripts
+* **Recommended**: VS Code with Dev Containers for easy setup
 
 ### Build from Source
 
@@ -666,7 +688,124 @@ cmake --build build --target latticedb_bench --config Release
 ```
 
 Add `-v` to show per-iteration progress and `--vector` to include the optional vector-search benchmarks. Each run prints a summary table in the terminal and writes a `benchmark_results.csv` artifact in the project root.
- 
+
+## Deployment
+
+Wanna run LatticeDB in production? No problem! LatticeDB provides **production-ready deployment configurations** for major cloud providers and HashiCorp stack, enabling you to deploy your database with enterprise-grade reliability, security, and scalability.
+
+### 📊 Built-in Monitoring & Observability
+
+All LatticeDB deployments include **integrated Prometheus and Grafana monitoring** out of the box:
+
+#### ⚡ Prometheus Metrics Collection
+- **Application Metrics**: Request rates, response times, error rates, database performance
+- **Infrastructure Metrics**: CPU, memory, disk, network utilization across all platforms
+- **Service Discovery**: Automatic discovery of LatticeDB instances and supporting services
+- **Multi-tenant**: Environment-specific monitoring (dev/staging/prod)
+
+#### 📈 Grafana Dashboards
+- **LatticeDB Dashboard**: Query performance, connection pools, transaction metrics
+- **Infrastructure Dashboard**: System resources, container metrics, storage utilization
+- **Platform-specific Dashboards**: AWS CloudWatch, Azure Monitor, GCP Cloud Monitoring integration
+- **HashiCorp Stack Dashboard**: Consul, Vault, Nomad cluster health
+
+#### 🚨 Intelligent Alerting
+- **Critical Alerts**: Service down, high error rates, database failures (PagerDuty)
+- **Warning Alerts**: Performance degradation, resource pressure (Slack)
+- **Info Alerts**: Deployment events, scaling activities (Email)
+
+```bash
+# Access monitoring dashboards
+# AWS: kubectl port-forward svc/grafana 3000:3000
+# Azure: az containerapp browse --name grafana
+# GCP: gcloud run services proxy grafana --port=3000
+# HashiCorp: consul connect proxy -service grafana -upstream grafana:3000
+```
+
+Ready-to-use monitoring for production workloads with zero configuration required! 🎯
+
+### Supported Platforms
+
+| Platform          | Service                | Features                              | Best For                 |
+|-------------------|------------------------|---------------------------------------|--------------------------|
+| **☁️ AWS**        | ECS Fargate + ALB      | Auto-scaling, EFS storage, CloudWatch | Enterprise workloads     |
+| **🌐 Azure**      | Container Apps         | Serverless, Auto-scaling, Azure Files | Modern cloud-native apps |
+| **🚀 GCP**        | Cloud Run + Cloud SQL  | Serverless, Global load balancer      | Global applications      |
+| **🏗️ HashiCorp** | Nomad + Consul + Vault | Service mesh, Secret management       | On-premises/hybrid       |
+
+### Quick Deploy
+
+Choose your preferred platform and deploy with a single command:
+
+```bash
+# AWS - Deploy to ECS Fargate with auto-scaling
+cd aws && ./deploy.sh
+
+# Azure - Deploy to Container Apps
+cd azure && ./deploy.sh
+
+# GCP - Deploy to Cloud Run (serverless)
+export GCP_PROJECT=your-project-id
+cd gcp && ./deploy.sh
+
+# HashiCorp Stack - Deploy to Nomad with service mesh
+cd hashicorp && ./deploy.sh
+```
+
+### What You Get
+
+Each deployment provides:
+
+- **🔄 Auto-scaling**: Scales based on CPU, memory, and request load
+- **🔒 Security**: Network isolation, secrets management, TLS encryption
+- **📊 Monitoring**: Comprehensive logging, metrics, and alerting
+- **💾 Persistence**: Durable storage with automated backups
+- **🌐 Load Balancing**: High availability with health checks
+- **📱 Management**: Web UIs and CLI tools for operations
+
+### Production Features
+
+- **Infrastructure as Code**: All deployments use Terraform
+- **CI/CD Ready**: Includes Travis CI and Jenkins configurations
+- **Multi-Environment**: Development, staging, and production configs
+- **Cost Optimized**: Auto-scaling and resource optimization
+- **Security Hardened**: Following cloud security best practices
+
+### Example: Deploy to AWS
+
+```bash
+cd aws
+
+# Customize your deployment
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your AWS region, domain, etc.
+
+# Deploy with monitoring and auto-scaling
+./deploy.sh
+
+# Your LatticeDB is now running at:
+# https://your-domain.com (or load balancer DNS)
+```
+
+### CI/CD Integration
+
+Automated deployments with:
+- **Travis CI**: Multi-cloud parallel deployments
+- **Jenkins**: Comprehensive pipeline with testing
+- **GitHub Actions**: Build, test, and deploy on push/PR
+
+For complete deployment instructions, troubleshooting, and advanced configurations, see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
+## GitHub Actions
+
+In addition to local builds & Travis/Jenkins, we also use GitHub Actions for CI/CD:
+
+<p align="center">
+  <img src="docs/github-actions.png" alt="GitHub Actions Screenshot" width="100%"/>
+</p>
+
+The workflow automatically builds and tests the code on every push and pull request, ensuring code quality and stability.
+
 ## Contributing
 
 We ❤️ contributions! Ways to help:

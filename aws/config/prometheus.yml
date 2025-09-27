@@ -1,0 +1,65 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'latticedb-aws'
+    environment: '${LATTICEDB_ENV}'
+
+rule_files:
+  - "alerts/*.yml"
+
+scrape_configs:
+  # LatticeDB application metrics
+  - job_name: 'latticedb'
+    static_configs:
+      - targets: ['latticedb.latticedb.monitoring:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ECS service discovery for LatticeDB instances
+  - job_name: 'ecs-latticedb'
+    ec2_sd_configs:
+      - region: us-west-2
+        port: 8080
+        filters:
+          - name: tag:Environment
+            values: ['production', 'staging', 'dev']
+          - name: tag:Project
+            values: ['LatticeDB']
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_tag_Environment]
+        target_label: environment
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: __address__
+        replacement: '${1}:8080'
+
+  # AWS CloudWatch metrics via cloudwatch_exporter
+  - job_name: 'cloudwatch'
+    static_configs:
+      - targets: ['cloudwatch-exporter:9106']
+    scrape_interval: 60s
+
+recording_rules:
+  - name: latticedb.rules
+    rules:
+      - record: latticedb:request_rate
+        expr: rate(http_requests_total{job="latticedb"}[5m])
+
+      - record: latticedb:error_rate
+        expr: rate(http_requests_total{job="latticedb",status=~"5.."}[5m])
+
+      - record: latticedb:response_time_p95
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="latticedb"}[5m]))
+
+      - record: latticedb:database_connections
+        expr: latticedb_database_connections{job="latticedb"}
+
+      - record: latticedb:query_duration_p95
+        expr: histogram_quantile(0.95, rate(latticedb_query_duration_seconds_bucket[5m]))

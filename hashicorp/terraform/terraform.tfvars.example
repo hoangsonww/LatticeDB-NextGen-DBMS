@@ -1,0 +1,119 @@
+# HashiCorp Stack Configuration
+consul_address    = "http://127.0.0.1:8500"
+consul_datacenter = "dc1"
+# consul_token    = "your-consul-acl-token"
+
+vault_address = "http://127.0.0.1:8200"
+# vault_token   = "your-vault-token"
+# vault_namespace = ""  # Vault Enterprise only
+
+nomad_address = "http://127.0.0.1:4646"
+nomad_region  = "global"
+# nomad_token   = "your-nomad-token"
+
+# Project Configuration
+project_name = "latticedb"
+environment  = "production"
+
+# Application Configuration
+container_image = "latticedb/latticedb"
+image_tag       = "latest"
+instance_count  = 3
+
+# Resource Configuration
+cpu_limit    = 1000  # MHz
+memory_limit = 2048  # MB
+
+# Port Configuration
+http_port   = 8080
+sql_port    = 5432
+health_port = 8081
+
+# Logging and Debugging
+log_level = "info"  # debug, info, warn, error
+
+# Security Configuration
+enable_tls             = true
+enable_consul_acl      = true
+enable_consul_connect  = true
+enable_vault_pki       = true
+
+# Storage Configuration
+enable_persistent_storage = true
+csi_plugin_id            = "aws-ebs0"  # Change based on your CSI plugin
+storage_size_min         = 10   # GiB
+storage_size_max         = 100  # GiB
+availability_zones       = ["us-west-2a", "us-west-2b", "us-west-2c"]
+
+# Database Configuration
+db_connection_url = "postgresql://{{username}}:{{password}}@localhost:5432/latticedb?sslmode=disable"
+db_username       = "vault"
+# db_password     = ""  # Leave empty to generate random password
+# admin_password  = ""  # Leave empty to generate random password
+
+# Connection Limits
+max_connections = 1000
+
+# Backup Configuration
+enable_backup        = true
+backup_interval      = "1h"
+backup_retention_days = 7
+
+# Networking Configuration
+enable_ingress_gateway = false
+ingress_hosts         = ["latticedb.local", "*.latticedb.local"]
+
+# Monitoring and Observability
+enable_monitoring = true
+enable_tracing    = false
+jaeger_endpoint   = "http://jaeger-collector:14268/api/traces"
+prometheus_endpoint = "http://prometheus:9090"
+
+# Deployment Configuration
+enable_canary_deployments = false
+canary_weight            = 10
+update_strategy          = "rolling"  # rolling, blue-green, canary
+max_parallel_updates     = 2
+min_healthy_time         = "30s"
+healthy_deadline         = "5m"
+auto_revert              = true
+
+# High Availability Configuration
+enable_anti_affinity     = true
+enable_leader_election   = true
+cluster_join_method      = "consul"  # consul, static, auto
+
+# Resource Constraints
+node_class = "compute"
+node_pool  = "default"
+constraint_attributes = {
+  # "attr.cpu.arch" = "amd64"
+  # "meta.environment" = "production"
+}
+
+# Service Mesh Configuration
+mesh_gateway_mode                = "local"  # local, remote, none
+enable_service_mesh_observability = true
+
+# External Integrations
+enable_external_dns = false
+dns_zone           = "latticedb.local"
+
+# Development and Testing (set to false for production)
+enable_debug_mode = false
+enable_profiling  = false
+test_data_enabled = false
+
+# Compliance and Security
+enable_audit_logging         = true
+compliance_mode             = "basic"  # none, basic, strict
+enable_encryption_at_rest   = true
+enable_encryption_in_transit = true
+
+# Additional Tags
+tags = {
+  owner       = "devops-team"
+  cost-center = "engineering"
+  project     = "latticedb"
+  managed-by  = "terraform"
+}

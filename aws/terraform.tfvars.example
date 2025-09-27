@@ -1,0 +1,49 @@
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Project Configuration
+project_name = "latticedb"
+environment  = "production"
+
+# Network Configuration
+vpc_cidr = "10.0.0.0/16"
+
+# Container Configuration
+container_cpu    = 1024  # 1 vCPU
+container_memory = 2048  # 2 GB RAM
+
+# Scaling Configuration
+desired_count = 2
+min_capacity  = 1
+max_capacity  = 10
+
+# Application Configuration
+image_tag = "latest"
+log_level = "info"
+
+# Storage Configuration
+enable_efs = true
+
+# Domain Configuration (optional)
+# domain_name      = "latticedb.example.com"
+# certificate_arn  = "arn:aws:acm:us-west-2:123456789012:certificate/12345678-1234-1234-1234-123456789012"
+# route53_zone_id  = "Z123456789012345678901"
+
+# Backup Configuration
+backup_retention_days = 7
+enable_backup        = true
+
+# Monitoring Configuration
+enable_monitoring   = true
+notification_email  = "admin@example.com"
+
+# Security Configuration
+allowed_cidr_blocks        = ["0.0.0.0/0"]
+enable_deletion_protection = true
+enable_access_logs        = true
+
+# Additional Tags
+tags = {
+  Owner = "DevOps Team"
+  CostCenter = "Engineering"
+}

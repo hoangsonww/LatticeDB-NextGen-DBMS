@@ -45,7 +45,8 @@
       "Read(//usr/bin/**)",
       "Bash(xcrun clang-format:*)",
       "Bash(xargs xcrun clang-format:*)",
-      "Bash(./latticedb_shell --help)"
+      "Bash(./latticedb_shell --help)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

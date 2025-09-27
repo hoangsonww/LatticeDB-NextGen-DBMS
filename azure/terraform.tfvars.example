@@ -1,0 +1,52 @@
+# Azure Configuration
+azure_location = "East US"
+
+# Project Configuration
+project_name = "latticedb"
+environment  = "production"
+
+# Network Configuration
+vnet_cidr = "10.0.0.0/16"
+
+# Container Configuration
+container_cpu    = 1.0  # vCPUs
+container_memory = "2Gi" # Memory
+
+# Scaling Configuration
+min_replicas = 1
+max_replicas = 10
+
+# Application Configuration
+image_tag = "latest"
+log_level = "info"
+
+# Storage Configuration
+enable_persistent_storage = true
+storage_replication_type  = "LRS"  # Local Redundancy Storage for cost optimization
+
+# Container Registry Configuration
+acr_sku = "Standard"
+
+# Domain Configuration (optional)
+# domain_name     = "latticedb.example.com"
+# certificate_id  = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-name/providers/Microsoft.App/managedEnvironments/env-name/certificates/cert-name"
+
+# Backup Configuration
+backup_retention_days = 7
+enable_backup        = true
+
+# Monitoring Configuration
+enable_monitoring   = true
+notification_email  = "admin@example.com"
+
+# Security Configuration
+allowed_ip_ranges          = ["0.0.0.0/0"]  # Restrict this in production
+enable_deletion_protection = true
+enable_access_logs        = true
+
+# Additional Tags
+tags = {
+  Owner      = "DevOps Team"
+  CostCenter = "Engineering"
+  Project    = "LatticeDB"
+}

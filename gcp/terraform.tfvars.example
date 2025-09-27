@@ -1,0 +1,91 @@
+# GCP Configuration
+project_id = "your-gcp-project-id"
+gcp_region = "us-central1"
+
+# Project Configuration
+project_name = "latticedb"
+environment  = "production"
+
+# Network Configuration
+subnet_cidr         = "10.0.0.0/24"
+vpc_connector_cidr  = "10.0.1.0/28"
+cloud_sql_cidr      = "10.0.2.0/24"
+
+# Container Configuration
+cpu_limit    = "2000m"  # 2 vCPUs
+memory_limit = "2Gi"    # 2 GB RAM
+
+# Scaling Configuration
+min_instances = 0   # Scale to zero when not used
+max_instances = 10
+
+# Application Configuration
+image_tag = "latest"
+log_level = "info"
+
+# Access Configuration
+allow_unauthenticated = true
+
+# Domain Configuration (optional)
+# custom_domain = "latticedb.example.com"
+enable_cdn    = true
+
+# Database Configuration (optional)
+enable_cloud_sql              = false
+cloud_sql_version            = "POSTGRES_15"
+cloud_sql_tier               = "db-f1-micro"
+cloud_sql_disk_size          = 20
+enable_point_in_time_recovery = true
+backup_start_time            = "03:00"
+
+# Database password (leave empty to generate random password)
+# db_password = ""
+
+# Storage Configuration
+enable_cloud_storage = false
+
+# Security Configuration
+enable_secret_manager = true
+# kms_key_name = "projects/your-project/locations/global/keyRings/your-ring/cryptoKeys/your-key"
+
+# Monitoring Configuration
+enable_monitoring = true
+# notification_channels = ["projects/your-project/notificationChannels/your-channel-id"]
+
+# Backup Configuration
+backup_retention_days = 7
+
+# Maintenance Configuration
+maintenance_window_day  = 7    # Sunday
+maintenance_window_hour = 3    # 3 AM
+
+# Security Configuration
+deletion_protection = true
+
+# Database Flags
+database_flags = {
+  log_checkpoints            = "on"
+  log_connections            = "on"
+  log_disconnections         = "on"
+  log_lock_waits            = "on"
+  log_min_duration_statement = "1000"
+}
+
+# Authorized Networks (for Cloud SQL access from specific IPs)
+# authorized_networks = [
+#   {
+#     name  = "office-network"
+#     value = "203.0.113.0/24"
+#   }
+# ]
+
+# VPC Connector Configuration
+enable_vpc_connector       = true
+vpc_connector_machine_type = "e2-micro"
+
+# Additional Labels
+labels = {
+  owner       = "devops-team"
+  cost-center = "engineering"
+  project     = "latticedb"
+}
