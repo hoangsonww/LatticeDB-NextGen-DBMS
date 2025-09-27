@@ -724,6 +724,9 @@ All LatticeDB deployments include **integrated Prometheus and Grafana monitoring
 
 Ready-to-use monitoring for production workloads with zero configuration required! 🎯
 
+> [!TIP]
+> See [MONITORING.md](MONITORING.md) for detailed setup, customization, and alerting instructions.
+
 ### Supported Platforms
 
 | Platform          | Service                | Features                              | Best For                 |
@@ -794,7 +797,8 @@ Automated deployments with:
 - **Jenkins**: Comprehensive pipeline with testing
 - **GitHub Actions**: Build, test, and deploy on push/PR
 
-For complete deployment instructions, troubleshooting, and advanced configurations, see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+> [!TIP]
+> For complete deployment instructions, troubleshooting, and advanced configurations, see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
 
 ## GitHub Actions
 
