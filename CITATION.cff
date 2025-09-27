@@ -1,8 +1,15 @@
 cff-version: 1.2.0
-title: "LatticeDB"
-message: "If you use LatticeDB in academic work, please cite:"
+message: "If you use this software, please cite it as below."
+type: software
+title: "LatticeDB-DBMS"
 authors:
-  - family-names: "LatticeDB Contributors"
-version: "0.1.0"
-date-released: "2025-09-03"
-repository-code: "https://github.com/hoangsonww/LatticeDB-Next-Gen-DMBS"
+  - family-names: Nguyen
+    given-names: Son
+    orcid: "https://orcid.org/0009-0002-7806-068X"
+    website: "https://sonnguyenhoang.com/"
+    github: "https://github.com/hoangsonww"
+    linkedin: "https://www.linkedin.com/in/hoangsonw/"
+version: "1.0.0"
+date-released: "2024-12-01"
+repository-code: "https://github.com/hoangsonww/LatticeDB-DBMS"
+license: MIT
