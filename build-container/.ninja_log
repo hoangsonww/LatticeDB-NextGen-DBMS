@@ -453,3 +453,5 @@
 28839	30677	1758938566706791540	CMakeFiles/comprehensive_test.dir/src/network/server.cpp.o	dfad10b9b1e17be9
 27981	31008	1758938567038204469	CMakeFiles/comprehensive_test.dir/src/engine/database_engine.cpp.o	f06968c7fed5f80
 31008	31104	1758938567132730526	comprehensive_test	12a0b9bc95726c6e
+11	1217	1758939496187405234	CMakeFiles/latticedb_cli.dir/src/main.cpp.o	26893c2916e01b2
+1218	1333	1758939496301515977	latticedb	e1abc70356f68933
