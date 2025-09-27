@@ -202,14 +202,17 @@ You do not need to install any dependencies locally. Just:
    ```bash
    cmake -S . -B build-container -DCMAKE_BUILD_TYPE=Release -G Ninja
    cmake --build build-container --parallel
-   ./build-container/latticedb --version
+   ./build-container/latticedb --version   # will show version info
+   ./build-container/latticedb             # launches CLI interface
    ```
 
-Upon complete, the DBMS should look like this:
+When successful, you should see the following:
 
 <p align="center">
   <img src="docs/repl.png" alt="LatticeDB REPL Screenshot" width="100%"/>
 </p>
+
+Feel free to try out some commands such as `help`, `\d` (list all tables), and `\stats` (show DB stats), and more!
 
 ### Hello World - Working Examples
 
@@ -674,7 +677,7 @@ We ❤️ contributions! Ways to help:
 * Improve docs—especially temporal/lineage tutorials.
 
 > [!NOTE]
-> Please run `clang-format` with `cmake --build build-container --target format` before submitting PRs!
+> Please run `clang-format` with `cmake --build build-container --target format` before submitting PRs! Replace `build-container` with your build directory if different.
 
 ## License
 

@@ -22,6 +22,9 @@ constexpr const char* COLOR_YELLOW = "\033[33m";
 constexpr const char* COLOR_MAGENTA = "\033[35m";
 constexpr const char* COLOR_GREEN = "\033[32m";
 
+// ---- Version ----
+constexpr const char* LATTICEDB_VERSION = "1.1.0";
+
 bool supports_color() {
 #if defined(_WIN32)
   return _isatty(_fileno(stdout)) != 0;
@@ -51,27 +54,36 @@ static std::string trim_copy(const std::string& text) {
   return text.substr(first, last - first + 1);
 }
 
+static void print_version() {
+  std::cout << "LatticeDB version " << LATTICEDB_VERSION << "\n";
+}
+
 static void print_welcome() {
   static const std::string banner = R"(
- _          _   _   _   _             ____   ____  
-| |    __ _| |_| |_| |_| | ___  ___  |  _ \ | __ ) 
-| |   / _` | __| __| __| |/ _ \/ __| | | | ||  _ \ 
-| |__| (_| | |_| |_| |_| |  __/\__ \ | |_| || |_) |
-|_____\__,_|\__|\__|\__|_|\___||___/ |____/ |____/ 
+  _           _   _   _          _____  ____  
+ | |         | | | | (_)        |  __ \|  _ \ 
+ | |     __ _| |_| |_ _  ___ ___| |  | | |_) |
+ | |    / _` | __| __| |/ __/ _ \ |  | |  _ < 
+ | |___| (_| | |_| |_| | (_|  __/ |__| | |_) |
+ |______\__,_|\__|\__|_|\___\___|_____/|____/ 
   )";
 
   std::cout << colorize(COLOR_CYAN, banner) << "\n";
-  std::cout << colorize(COLOR_YELLOW, "Modern Relational Database Engine") << "\n";
+  std::cout << colorize(COLOR_YELLOW, std::string("LatticeDB v") + LATTICEDB_VERSION +
+                                          " — Modern Relational Database Engine")
+            << "\n";
   std::cout << colorize(COLOR_MAGENTA,
-                         "ACID Transactions · MVCC · Write-Ahead Logging · Advanced Security")
+                        "ACID Transactions · MVCC · Write-Ahead Logging · Advanced Security")
             << "\n";
   std::cout << colorize(COLOR_GREEN,
-                         "Vector Search · Time Travel · Adaptive Compression · Streaming Analytics")
+                        "Vector Search · Time Travel · Adaptive Compression · Streaming Analytics")
             << "\n\n";
   std::cout << "Type 'help' for commands, 'exit' to quit.\n\n";
 }
 
 static void print_help() {
+  // Show version at the top of help
+  std::cout << colorize(COLOR_YELLOW, std::string("LatticeDB v") + LATTICEDB_VERSION) << "\n\n";
   std::cout << colorize(COLOR_CYAN, "Available Commands:") << "\n\n";
   print_command_line("help", "Show this help message");
   print_command_line("exit, quit", "Exit the database");
@@ -275,13 +287,18 @@ int main(int argc, char* argv[]) {
       db_file = argv[++i];
     } else if (arg == "--no-logging") {
       enable_logging = false;
+    } else if (arg == "--version") {
+      print_version();
+      return 0;
     } else if (arg == "--help") {
       std::cout << "Usage: " << argv[0] << " [database_file] [options]\n";
+      std::cout << "LatticeDB version " << LATTICEDB_VERSION << "\n";
       std::cout << "Arguments:\n";
       std::cout << "  database_file    Database file path (default: latticedb.db)\n";
       std::cout << "Options:\n";
       std::cout << "  --file <path>    Database file path (overrides positional argument)\n";
       std::cout << "  --no-logging     Disable write-ahead logging\n";
+      std::cout << "  --version        Show version and exit\n";
       std::cout << "  --help           Show this help\n";
       return 0;
     } else if (arg[0] != '-') {
