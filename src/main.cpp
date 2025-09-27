@@ -53,20 +53,21 @@ static std::string trim_copy(const std::string& text) {
 
 static void print_welcome() {
   static const std::string banner = R"(
- _          _   _   _   _             ____   ____  
-| |    __ _| |_| |_| |_| | ___  ___  |  _ \ | __ ) 
-| |   / _` | __| __| __| |/ _ \/ __| | | | ||  _ \ 
-| |__| (_| | |_| |_| |_| |  __/\__ \ | |_| || |_) |
-|_____\__,_|\__|\__|\__|_|\___||___/ |____/ |____/ 
+  _           _   _   _          _____  ____  
+ | |         | | | | (_)        |  __ \|  _ \ 
+ | |     __ _| |_| |_ _  ___ ___| |  | | |_) |
+ | |    / _` | __| __| |/ __/ _ \ |  | |  _ < 
+ | |___| (_| | |_| |_| | (_|  __/ |__| | |_) |
+ |______\__,_|\__|\__|_|\___\___|_____/|____/ 
   )";
 
   std::cout << colorize(COLOR_CYAN, banner) << "\n";
   std::cout << colorize(COLOR_YELLOW, "Modern Relational Database Engine") << "\n";
   std::cout << colorize(COLOR_MAGENTA,
-                         "ACID Transactions · MVCC · Write-Ahead Logging · Advanced Security")
+                        "ACID Transactions · MVCC · Write-Ahead Logging · Advanced Security")
             << "\n";
   std::cout << colorize(COLOR_GREEN,
-                         "Vector Search · Time Travel · Adaptive Compression · Streaming Analytics")
+                        "Vector Search · Time Travel · Adaptive Compression · Streaming Analytics")
             << "\n\n";
   std::cout << "Type 'help' for commands, 'exit' to quit.\n\n";
 }

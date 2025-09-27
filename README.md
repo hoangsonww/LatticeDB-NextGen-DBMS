@@ -674,7 +674,7 @@ We ❤️ contributions! Ways to help:
 * Improve docs—especially temporal/lineage tutorials.
 
 > [!NOTE]
-> Please run `clang-format` with `cmake --build build-container --target format` before submitting PRs!
+> Please run `clang-format` with `cmake --build build-container --target format` before submitting PRs! Replace `build-container` with your build directory if different.
 
 ## License
 
