@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "disk_manager.h"
 #include <iostream>
 #include <sys/stat.h>

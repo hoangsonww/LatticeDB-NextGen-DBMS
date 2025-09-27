@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 
 #include "../storage/page.h"
 #include "../types/value.h"

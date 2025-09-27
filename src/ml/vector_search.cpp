@@ -1,3 +1,5 @@
+#include <mutex>
+
 // Implementation for vector_search.h
 #include "vector_search.h"
 #include <algorithm>

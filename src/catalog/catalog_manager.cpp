@@ -1,3 +1,5 @@
+#include <shared_mutex>
+
 #include "catalog_manager.h"
 #include "../common/exception.h"
 #include "table_heap.h"

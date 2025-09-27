@@ -1,3 +1,5 @@
+#include <mutex>
+
 // Implementation for stream_processor.h
 #include "stream_processor.h"
 #include <fstream>

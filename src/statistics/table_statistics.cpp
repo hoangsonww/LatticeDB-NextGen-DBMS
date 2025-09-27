@@ -1,3 +1,5 @@
+#include <mutex>
+
 // Implementation for table_statistics.h
 #include "table_statistics.h"
 #include <algorithm>

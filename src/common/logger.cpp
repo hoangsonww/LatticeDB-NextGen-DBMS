@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "logger.h"
 #include <chrono>
 #include <iomanip>

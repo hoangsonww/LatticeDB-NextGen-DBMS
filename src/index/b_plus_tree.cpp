@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "b_plus_tree.h"
 #include "b_plus_tree_page.h"
 #include <algorithm>
