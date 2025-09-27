@@ -91,6 +91,9 @@ public:
   std::string export_json_report() const;
   std::string export_text_report() const;
 
+  // Update metadata
+  void update_database_info(const DatabaseInfo& info);
+
   // Reset statistics
   void reset_metrics();
 
