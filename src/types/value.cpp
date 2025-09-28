@@ -22,6 +22,44 @@ static bool is_numeric(ValueType t) {
   }
 }
 
+std::string value_type_to_string(ValueType type) {
+  switch (type) {
+  case ValueType::NULL_TYPE:
+    return "NULL";
+  case ValueType::BOOLEAN:
+    return "BOOLEAN";
+  case ValueType::TINYINT:
+    return "TINYINT";
+  case ValueType::SMALLINT:
+    return "SMALLINT";
+  case ValueType::INTEGER:
+    return "INTEGER";
+  case ValueType::BIGINT:
+    return "BIGINT";
+  case ValueType::DECIMAL:
+    return "DECIMAL";
+  case ValueType::REAL:
+    return "REAL";
+  case ValueType::DOUBLE:
+    return "DOUBLE";
+  case ValueType::VARCHAR:
+    return "VARCHAR";
+  case ValueType::TEXT:
+    return "TEXT";
+  case ValueType::TIMESTAMP:
+    return "TIMESTAMP";
+  case ValueType::DATE:
+    return "DATE";
+  case ValueType::TIME:
+    return "TIME";
+  case ValueType::BLOB:
+    return "BLOB";
+  case ValueType::VECTOR:
+    return "VECTOR";
+  }
+  return "UNKNOWN";
+}
+
 std::string Value::to_string() const {
   std::ostringstream ss;
   switch (type_) {
