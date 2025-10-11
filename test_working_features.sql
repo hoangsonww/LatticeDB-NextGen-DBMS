@@ -1,5 +1,3 @@
--- Test working features only
-
 -- Create table with primary key
 CREATE TABLE products (
     id INTEGER PRIMARY KEY,

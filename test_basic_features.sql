@@ -1,5 +1,3 @@
--- Basic test of supported features
-
 -- Create simple tables
 CREATE TABLE users (id INTEGER, name VARCHAR(50), age INTEGER);
 CREATE TABLE orders (id INTEGER, user_id INTEGER, amount DOUBLE);
