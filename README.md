@@ -1,4 +1,4 @@
-# LatticeDB - Modern Production-Ready Relational Database Management System 🚀
+# LatticeDB - Modern Next-Gen Relational Database Management System 🚀
 
 *A feature-complete, high-performance RDBMS with native AI/ML support, time-travel queries, streaming statistics, built-in GUI, and enterprise security.*
 
@@ -98,7 +98,7 @@
 
 ## Why LatticeDB
 
-LatticeDB is a **production-ready RDBMS** built from scratch in modern C++17, combining traditional database capabilities with cutting-edge features:
+LatticeDB is a **Next-Gen RDBMS** built from scratch in modern C++17, combining traditional database capabilities with cutting-edge features:
 
 1. **Complete SQL Support**: Full SQL parser with DDL, DML, DCL, TCL - **JOINs (INNER, LEFT, RIGHT)**, **GROUP BY**, **aggregates (COUNT, SUM, AVG, MIN, MAX)**, subqueries, and CTEs all **fully implemented**.
 2. **Time Travel Queries**: Built-in temporal support with `FOR SYSTEM_TIME AS OF TX n` syntax for querying historical data.

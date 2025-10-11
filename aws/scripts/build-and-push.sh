@@ -82,7 +82,7 @@ build_image() {
     labels+=" --label org.opencontainers.image.revision=$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
     labels+=" --label org.opencontainers.image.source=https://github.com/your-org/LatticeDB-DBMS"
     labels+=" --label org.opencontainers.image.title=LatticeDB"
-    labels+=" --label org.opencontainers.image.description='Modern Production-Ready RDBMS'"
+    labels+=" --label org.opencontainers.image.description='Modern, Next-Gen RDBMS'"
 
     # Build multi-arch image
     docker buildx create --use --name latticedb-builder 2>/dev/null || true
