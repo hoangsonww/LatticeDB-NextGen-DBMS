@@ -6,33 +6,33 @@ Complete guide to the production-ready DevOps infrastructure for LatticeDB.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Deployment Pipeline                       │
+│                    Deployment Pipeline                      │
 ├─────────────────────────────────────────────────────────────┤
-│                                                               │
+│                                                             │
 │  Pre-Flight  →  Deploy  →  Validate  →  Monitor  →  Promote │
-│                                                               │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│                  Deployment Strategies                        │
+│                  Deployment Strategies                      │
 ├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  • Rolling: Simple, sequential updates                       │
-│  • Blue/Green: Zero-downtime instant cutover                 │
+│                                                             │
+│  • Rolling: Simple, sequential updates                      │
+│  • Blue/Green: Zero-downtime instant cutover                │
 │  • Canary: Gradual traffic shift with validation            │
-│  • Feature Flags: Progressive feature rollout                │
-│                                                               │
+│  • Feature Flags: Progressive feature rollout               │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│                   Resilience Patterns                         │
+│                   Resilience Patterns                       │
 ├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  • Circuit Breakers: Prevent cascade failures                │
-│  • Rate Limiting: Protect from overload                      │
-│  • Chaos Engineering: Validate resilience                    │
-│  • Automated Rollback: Quick recovery                        │
-│                                                               │
+│                                                             │
+│  • Circuit Breakers: Prevent cascade failures               │
+│  • Rate Limiting: Protect from overload                     │
+│  • Chaos Engineering: Validate resilience                   │
+│  • Automated Rollback: Quick recovery                       │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
