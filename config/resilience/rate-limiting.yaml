@@ -1,0 +1,299 @@
+# Rate Limiting Configuration for LatticeDB
+# Protects services from overload and ensures fair resource distribution
+
+version: "1.0"
+
+# Global rate limiting settings
+global:
+  enabled: true
+  default_algorithm: "token_bucket"  # Options: token_bucket, leaky_bucket, fixed_window, sliding_window
+  default_rate: 1000  # requests per window
+  default_window: 60  # seconds
+  burst_size: 100  # additional requests allowed in burst
+  rejection_strategy: "error"  # Options: error, queue, drop
+
+# Environment-specific limits
+environments:
+  production:
+    global_rate: 10000
+    burst_multiplier: 1.5
+
+  staging:
+    global_rate: 5000
+    burst_multiplier: 2.0
+
+  development:
+    global_rate: 1000
+    burst_multiplier: 3.0
+
+# Endpoint-specific rate limits
+endpoints:
+  # Health check - very high limit
+  - path: /health
+    method: GET
+    rate: 10000
+    window: 60
+    algorithm: fixed_window
+    enabled: true
+
+  # Metrics endpoint
+  - path: /metrics
+    method: GET
+    rate: 1000
+    window: 60
+    enabled: true
+
+  # Query API - moderate limit with user-based quotas
+  - path: /api/v1/query
+    method: POST
+    rate: 100
+    window: 60
+    algorithm: sliding_window
+    enabled: true
+
+    # User-based quotas
+    per_user:
+      enabled: true
+      rate: 50
+      window: 60
+      burst_size: 10
+
+    # IP-based quotas (fallback for unauthenticated)
+    per_ip:
+      enabled: true
+      rate: 20
+      window: 60
+
+  # Write operations - stricter limits
+  - path: /api/v1/write
+    method: POST
+    rate: 50
+    window: 60
+    algorithm: token_bucket
+    enabled: true
+
+    per_user:
+      enabled: true
+      rate: 25
+      window: 60
+
+  # Batch operations - very strict
+  - path: /api/v1/batch
+    method: POST
+    rate: 10
+    window: 60
+    algorithm: leaky_bucket
+    enabled: true
+
+    per_user:
+      enabled: true
+      rate: 5
+      window: 60
+
+  # Admin API - authenticated only
+  - path: /admin/*
+    method: "*"
+    rate: 100
+    window: 60
+    enabled: true
+    require_authentication: true
+
+    per_user:
+      enabled: true
+      rate: 50
+      window: 60
+
+# User tier-based rate limiting
+user_tiers:
+  free:
+    requests_per_day: 1000
+    requests_per_hour: 100
+    requests_per_minute: 10
+    burst_size: 5
+
+  basic:
+    requests_per_day: 10000
+    requests_per_hour: 1000
+    requests_per_minute: 50
+    burst_size: 20
+
+  premium:
+    requests_per_day: 100000
+    requests_per_hour: 10000
+    requests_per_minute: 500
+    burst_size: 100
+
+  enterprise:
+    requests_per_day: 1000000
+    requests_per_hour: 100000
+    requests_per_minute: 5000
+    burst_size: 500
+
+# IP-based rate limiting (DDoS protection)
+ip_protection:
+  enabled: true
+
+  # Global IP limit
+  global:
+    rate: 1000
+    window: 60
+    algorithm: sliding_window
+
+  # Whitelist
+  whitelist:
+    enabled: true
+    ips:
+      - 10.0.0.0/8  # Internal network
+      - 172.16.0.0/12  # Private network
+      - 192.168.0.0/16  # Local network
+
+  # Blacklist
+  blacklist:
+    enabled: true
+    auto_blacklist: true
+    auto_blacklist_threshold: 10000  # requests per minute
+    auto_blacklist_duration: 3600  # seconds
+    ips: []
+
+  # Geographic restrictions
+  geographic:
+    enabled: false
+    allowed_countries: []
+    blocked_countries: []
+
+# Distributed rate limiting (for multi-instance deployments)
+distributed:
+  enabled: true
+  backend: redis  # Options: redis, memcached, dynamodb
+
+  redis:
+    host: localhost
+    port: 6379
+    db: 0
+    password: ""
+    cluster_mode: false
+
+    # Key prefix for rate limit counters
+    key_prefix: "latticedb:ratelimit:"
+
+    # TTL for counter keys
+    ttl_seconds: 3600
+
+  # Fallback to local rate limiting if distributed backend unavailable
+  fallback_to_local: true
+
+# Response headers
+headers:
+  enabled: true
+
+  # Standard rate limit headers
+  include_limit: true  # X-RateLimit-Limit
+  include_remaining: true  # X-RateLimit-Remaining
+  include_reset: true  # X-RateLimit-Reset
+
+  # Retry-After header when rate limited
+  include_retry_after: true
+
+# Custom responses
+responses:
+  # HTTP 429 Too Many Requests
+  rate_limited:
+    status_code: 429
+    body:
+      error: "Rate limit exceeded"
+      message: "You have exceeded the rate limit. Please try again later."
+      retry_after_seconds: "${retry_after}"
+
+    # Custom message per endpoint
+    custom_messages:
+      /api/v1/query: "Query rate limit exceeded. Please reduce request frequency."
+      /api/v1/write: "Write rate limit exceeded. Please batch your writes or upgrade your tier."
+
+# Monitoring and metrics
+monitoring:
+  enabled: true
+
+  metrics:
+    - total_requests
+    - rate_limited_requests
+    - rejection_rate
+    - average_wait_time
+    - per_endpoint_rates
+    - per_user_rates
+    - per_ip_rates
+
+  exporters:
+    prometheus:
+      enabled: true
+      port: 9090
+      namespace: latticedb_ratelimit
+
+    cloudwatch:
+      enabled: true
+      namespace: LatticeDB/RateLimiting
+
+  alerts:
+    - name: high_rate_limit_rejections
+      condition: rejection_rate > 10
+      severity: warning
+
+    - name: possible_ddos
+      condition: total_requests > 50000 AND rejection_rate > 50
+      severity: critical
+
+    - name: rate_limit_backend_unavailable
+      condition: backend_available == false
+      severity: critical
+
+# Adaptive rate limiting
+adaptive:
+  enabled: true
+
+  # Automatically adjust limits based on system load
+  auto_adjust:
+    enabled: true
+
+    # Reduce limits when system is under stress
+    reduce_on_high_cpu: true
+    cpu_threshold: 80
+    reduction_factor: 0.5
+
+    reduce_on_high_memory: true
+    memory_threshold: 85
+
+    reduce_on_high_latency: true
+    latency_threshold_ms: 1000
+
+    # Restore limits when system recovers
+    recovery_delay_seconds: 300
+
+  # Gradually increase limits for good actors
+  reputation_based:
+    enabled: true
+    bonus_multiplier: 1.5  # Up to 50% bonus for good reputation
+    penalty_multiplier: 0.5  # Up to 50% penalty for bad reputation
+
+# Testing
+testing:
+  enabled: true
+
+  # Bypass rate limits for testing
+  bypass_for_testing: false
+  test_api_keys: []
+
+  # Chaos mode - randomly trigger rate limits
+  chaos_mode:
+    enabled: false
+    probability: 0.01
+
+# Logging
+logging:
+  enabled: true
+  level: info
+
+  log_rate_limited_requests: true
+  log_user_quotas: true
+  log_ip_blocking: true
+
+  # Sample rate for high-volume endpoints
+  sampling_rate: 0.1  # Log 10% of requests

@@ -1,0 +1,405 @@
+{
+  "dashboard": {
+    "title": "LatticeDB Deployment Metrics",
+    "tags": ["latticedb", "deployment", "devops"],
+    "timezone": "UTC",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+
+    "panels": [
+      {
+        "id": 1,
+        "title": "Deployment Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "latticedb_deployment_status",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "orientation": "auto",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"value": 0, "text": "Failed", "color": "red"},
+              {"value": 1, "text": "In Progress", "color": "yellow"},
+              {"value": 2, "text": "Success", "color": "green"}
+            ]
+          }
+        }
+      },
+
+      {
+        "id": 2,
+        "title": "Deployment Strategy",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "latticedb_deployment_strategy",
+            "refId": "A"
+          }
+        ]
+      },
+
+      {
+        "id": 3,
+        "title": "Deployment Duration",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "latticedb_deployment_duration_seconds",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 300, "color": "yellow"},
+                {"value": 600, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+
+      {
+        "id": 4,
+        "title": "Success Rate (24h)",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(latticedb_deployment_success_total[24h])) / sum(rate(latticedb_deployment_total[24h])) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 95, "color": "yellow"},
+                {"value": 99, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+
+      {
+        "id": 5,
+        "title": "Deployment Frequency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(latticedb_deployment_total[1h]))",
+            "legendFormat": "Deployments per hour",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Deployments/hour"},
+          {"format": "short", "show": false}
+        ]
+      },
+
+      {
+        "id": 6,
+        "title": "Deployment Outcomes",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(latticedb_deployment_success_total[5m]))",
+            "legendFormat": "Success",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(latticedb_deployment_failure_total[5m]))",
+            "legendFormat": "Failure",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(latticedb_deployment_rollback_total[5m]))",
+            "legendFormat": "Rollback",
+            "refId": "C"
+          }
+        ]
+      },
+
+      {
+        "id": 7,
+        "title": "Blue/Green Deployments",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "latticedb_bluegreen_traffic_blue_percent",
+            "legendFormat": "Blue Traffic %",
+            "refId": "A"
+          },
+          {
+            "expr": "latticedb_bluegreen_traffic_green_percent",
+            "legendFormat": "Green Traffic %",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "min": 0, "max": 100},
+          {"format": "short", "show": false}
+        ]
+      },
+
+      {
+        "id": 8,
+        "title": "Canary Deployments",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12},
+        "targets": [
+          {
+            "expr": "latticedb_canary_traffic_stable_percent",
+            "legendFormat": "Stable Traffic %",
+            "refId": "A"
+          },
+          {
+            "expr": "latticedb_canary_traffic_canary_percent",
+            "legendFormat": "Canary Traffic %",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "min": 0, "max": 100},
+          {"format": "short", "show": false}
+        ]
+      },
+
+      {
+        "id": 9,
+        "title": "Rollback Events",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(increase(latticedb_deployment_rollback_total[1h]))",
+            "legendFormat": "Rollbacks",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Count"},
+          {"format": "short", "show": false}
+        ]
+      },
+
+      {
+        "id": 10,
+        "title": "Error Rate During Deployment",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(rate(latticedb_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(latticedb_http_requests_total[5m])) * 100",
+            "legendFormat": "Error Rate %",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent"},
+          {"format": "short", "show": false}
+        ],
+        "alert": {
+          "name": "High Error Rate During Deployment",
+          "conditions": [
+            {
+              "evaluator": {"type": "gt", "params": [5]},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"type": "avg"},
+              "type": "query"
+            }
+          ]
+        }
+      },
+
+      {
+        "id": 11,
+        "title": "P95 Latency During Deployment",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(latticedb_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95 Latency",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Latency"},
+          {"format": "short", "show": false}
+        ]
+      },
+
+      {
+        "id": 12,
+        "title": "Service Health",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "latticedb_service_healthy_instances",
+            "legendFormat": "Healthy Instances",
+            "refId": "A"
+          },
+          {
+            "expr": "latticedb_service_total_instances",
+            "legendFormat": "Total Instances",
+            "refId": "B"
+          }
+        ]
+      },
+
+      {
+        "id": 13,
+        "title": "Deployment Validation Results",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "latticedb_deployment_validation_result",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true},
+              "indexByName": {
+                "validation_type": 0,
+                "result": 1,
+                "timestamp": 2
+              }
+            }
+          }
+        ]
+      },
+
+      {
+        "id": 14,
+        "title": "Mean Time To Recovery (MTTR)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 36},
+        "targets": [
+          {
+            "expr": "avg(latticedb_deployment_recovery_time_seconds)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 300, "color": "yellow"},
+                {"value": 600, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+
+      {
+        "id": 15,
+        "title": "Circuit Breaker Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 36},
+        "targets": [
+          {
+            "expr": "latticedb_circuit_breaker_state",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"value": 0, "text": "Closed", "color": "green"},
+              {"value": 1, "text": "Open", "color": "red"},
+              {"value": 2, "text": "Half-Open", "color": "yellow"}
+            ]
+          }
+        }
+      },
+
+      {
+        "id": 16,
+        "title": "Rate Limiting Status",
+        "type": "graph",
+        "gridPos": {"h": 4, "w": 12, "x": 12, "y": 36},
+        "targets": [
+          {
+            "expr": "sum(rate(latticedb_rate_limited_requests_total[5m]))",
+            "legendFormat": "Rate Limited Requests/s",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(latticedb_deployment_status, environment)",
+          "current": {"text": "All", "value": "$__all"},
+          "includeAll": true
+        },
+        {
+          "name": "deployment_strategy",
+          "type": "custom",
+          "query": "rolling,blue-green,canary,dark-launch",
+          "current": {"text": "All", "value": "$__all"},
+          "includeAll": true
+        }
+      ]
+    },
+
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "expr": "changes(latticedb_deployment_version[5m]) > 0",
+          "tagKeys": "deployment_strategy,environment",
+          "textFormat": "Deployment: {{deployment_strategy}}",
+          "iconColor": "blue"
+        },
+        {
+          "name": "Rollbacks",
+          "datasource": "Prometheus",
+          "expr": "changes(latticedb_deployment_rollback_total[5m]) > 0",
+          "iconColor": "red"
+        }
+      ]
+    }
+  }
+}

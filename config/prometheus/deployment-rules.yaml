@@ -1,0 +1,241 @@
+# Prometheus Recording and Alerting Rules for Deployments
+
+groups:
+  - name: deployment_metrics
+    interval: 30s
+    rules:
+      # Recording rules for deployment metrics
+
+      - record: latticedb:deployment:success_rate_1h
+        expr: |
+          sum(rate(latticedb_deployment_success_total[1h]))
+          /
+          sum(rate(latticedb_deployment_total[1h])) * 100
+
+      - record: latticedb:deployment:failure_rate_1h
+        expr: |
+          sum(rate(latticedb_deployment_failure_total[1h]))
+          /
+          sum(rate(latticedb_deployment_total[1h])) * 100
+
+      - record: latticedb:deployment:rollback_rate_1h
+        expr: |
+          sum(rate(latticedb_deployment_rollback_total[1h]))
+          /
+          sum(rate(latticedb_deployment_total[1h])) * 100
+
+      - record: latticedb:deployment:avg_duration_1h
+        expr: |
+          avg(latticedb_deployment_duration_seconds) by (environment, strategy)
+
+      - record: latticedb:deployment:p95_duration_1h
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(latticedb_deployment_duration_seconds_bucket[1h])) by (le, environment, strategy)
+          )
+
+      - record: latticedb:deployment:frequency_1h
+        expr: |
+          sum(rate(latticedb_deployment_total[1h])) by (environment)
+
+  - name: deployment_health_metrics
+    interval: 30s
+    rules:
+      - record: latticedb:deployment:error_rate_during_deployment
+        expr: |
+          sum(rate(latticedb_http_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(latticedb_http_requests_total[5m])) * 100
+          * on() group_left latticedb_deployment_in_progress
+
+      - record: latticedb:deployment:latency_p95_during_deployment
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(latticedb_request_duration_seconds_bucket[5m])) by (le)
+          )
+          * on() group_left latticedb_deployment_in_progress
+
+      - record: latticedb:deployment:service_availability
+        expr: |
+          (latticedb_service_healthy_instances / latticedb_service_total_instances) * 100
+
+  - name: canary_metrics
+    interval: 30s
+    rules:
+      - record: latticedb:canary:error_rate_stable
+        expr: |
+          sum(rate(latticedb_http_requests_total{deployment_type="stable",status=~"5.."}[5m]))
+          /
+          sum(rate(latticedb_http_requests_total{deployment_type="stable"}[5m])) * 100
+
+      - record: latticedb:canary:error_rate_canary
+        expr: |
+          sum(rate(latticedb_http_requests_total{deployment_type="canary",status=~"5.."}[5m]))
+          /
+          sum(rate(latticedb_http_requests_total{deployment_type="canary"}[5m])) * 100
+
+      - record: latticedb:canary:error_rate_delta
+        expr: |
+          latticedb:canary:error_rate_canary - latticedb:canary:error_rate_stable
+
+      - record: latticedb:canary:latency_p95_stable
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(latticedb_request_duration_seconds_bucket{deployment_type="stable"}[5m])) by (le)
+          )
+
+      - record: latticedb:canary:latency_p95_canary
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(latticedb_request_duration_seconds_bucket{deployment_type="canary"}[5m])) by (le)
+          )
+
+  - name: deployment_alerts
+    interval: 30s
+    rules:
+      # Deployment failure alert
+      - alert: DeploymentFailed
+        expr: latticedb_deployment_status == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: deployment
+        annotations:
+          summary: "Deployment failed for {{ $labels.environment }}"
+          description: "Deployment failed. Strategy: {{ $labels.strategy }}, Environment: {{ $labels.environment }}"
+
+      # High deployment failure rate
+      - alert: HighDeploymentFailureRate
+        expr: latticedb:deployment:failure_rate_1h > 20
+        for: 5m
+        labels:
+          severity: warning
+          component: deployment
+        annotations:
+          summary: "High deployment failure rate"
+          description: "Deployment failure rate is {{ $value }}% in the last hour"
+
+      # Deployment taking too long
+      - alert: DeploymentDurationHigh
+        expr: latticedb_deployment_duration_seconds > 900
+        for: 5m
+        labels:
+          severity: warning
+          component: deployment
+        annotations:
+          summary: "Deployment taking too long"
+          description: "Deployment has been running for {{ $value }} seconds"
+
+      # Error rate spike during deployment
+      - alert: ErrorRateSpikeDeployment
+        expr: latticedb:deployment:error_rate_during_deployment > 10
+        for: 2m
+        labels:
+          severity: critical
+          component: deployment
+        annotations:
+          summary: "Error rate spike during deployment"
+          description: "Error rate is {{ $value }}% during deployment"
+
+      # Latency spike during deployment
+      - alert: LatencySpikeDeployment
+        expr: latticedb:deployment:latency_p95_during_deployment > 2
+        for: 2m
+        labels:
+          severity: warning
+          component: deployment
+        annotations:
+          summary: "Latency spike during deployment"
+          description: "P95 latency is {{ $value }}s during deployment"
+
+      # Service availability drop
+      - alert: ServiceAvailabilityDrop
+        expr: latticedb:deployment:service_availability < 95
+        for: 1m
+        labels:
+          severity: critical
+          component: deployment
+        annotations:
+          summary: "Service availability dropped"
+          description: "Service availability is {{ $value }}%"
+
+      # Canary showing higher error rate
+      - alert: CanaryErrorRateHigh
+        expr: latticedb:canary:error_rate_delta > 5
+        for: 3m
+        labels:
+          severity: critical
+          component: canary
+        annotations:
+          summary: "Canary has higher error rate than stable"
+          description: "Canary error rate is {{ $value }}% higher than stable"
+
+      # Rollback occurred
+      - alert: DeploymentRolledBack
+        expr: increase(latticedb_deployment_rollback_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: deployment
+        annotations:
+          summary: "Deployment was rolled back"
+          description: "A deployment rollback occurred in {{ $labels.environment }}"
+
+      # Circuit breaker opened during deployment
+      - alert: CircuitBreakerOpenedDeployment
+        expr: latticedb_circuit_breaker_state == 1 and latticedb_deployment_in_progress == 1
+        for: 1m
+        labels:
+          severity: critical
+          component: resilience
+        annotations:
+          summary: "Circuit breaker opened during deployment"
+          description: "Circuit breaker {{ $labels.service }} opened during deployment"
+
+      # High rate limiting during deployment
+      - alert: HighRateLimitingDeployment
+        expr: |
+          sum(rate(latticedb_rate_limited_requests_total[5m]))
+          /
+          sum(rate(latticedb_http_requests_total[5m])) > 0.1
+          and latticedb_deployment_in_progress == 1
+        for: 5m
+        labels:
+          severity: warning
+          component: resilience
+        annotations:
+          summary: "High rate limiting during deployment"
+          description: "{{ $value | humanizePercentage }} of requests are being rate limited"
+
+      # Deployment validation failed
+      - alert: DeploymentValidationFailed
+        expr: latticedb_deployment_validation_result{result="failed"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          component: deployment
+        annotations:
+          summary: "Deployment validation failed"
+          description: "Validation {{ $labels.validation_type }} failed"
+
+      # Mean Time To Recovery high
+      - alert: HighMTTR
+        expr: avg(latticedb_deployment_recovery_time_seconds) > 600
+        for: 10m
+        labels:
+          severity: warning
+          component: deployment
+        annotations:
+          summary: "High Mean Time To Recovery"
+          description: "MTTR is {{ $value }} seconds"
+
+      # Too many deployments in short time
+      - alert: DeploymentFrequencyHigh
+        expr: sum(increase(latticedb_deployment_total[15m])) > 10
+        for: 1m
+        labels:
+          severity: warning
+          component: deployment
+        annotations:
+          summary: "Deployment frequency is high"
+          description: "{{ $value }} deployments in last 15 minutes"

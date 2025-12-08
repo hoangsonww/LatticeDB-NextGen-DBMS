@@ -1,0 +1,302 @@
+# Feature Flags Configuration for LatticeDB
+# Enables A/B testing and gradual feature rollouts
+
+version: "1.0"
+
+# Feature flag backend
+backend:
+  type: "redis"  # Options: redis, dynamodb, local
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 1
+    key_prefix: "latticedb:flags:"
+
+  # Fallback to defaults if backend unavailable
+  fallback_to_defaults: true
+
+# Global settings
+global:
+  enabled: true
+  default_enabled: false  # New flags are disabled by default
+  evaluation_mode: "user_based"  # Options: user_based, session_based, percentage_based
+
+  # Cache settings
+  cache:
+    enabled: true
+    ttl_seconds: 300
+    max_size: 10000
+
+# Feature definitions
+features:
+  # New query optimizer
+  - name: "new_query_optimizer"
+    description: "Next-generation query optimizer with ML-based cost estimation"
+    enabled: false
+    rollout_strategy: "percentage"
+
+    rollout:
+      percentage: 10  # 10% of users
+      increment_by: 10  # Increase by 10% each step
+      increment_interval_hours: 24
+
+    targeting:
+      user_tiers: ["premium", "enterprise"]
+      environments: ["staging", "production"]
+
+    monitoring:
+      success_metric: "query_execution_time_ms"
+      success_threshold: 0.8  # 20% improvement required
+      error_metric: "query_errors_total"
+      error_threshold: 0.05  # Max 5% error rate
+
+    rollback:
+      auto_rollback: true
+      conditions:
+        - "error_rate > 0.05"
+        - "latency_increase > 0.3"
+
+  # Vector similarity search v2
+  - name: "vector_search_v2"
+    description: "Improved vector similarity search with HNSW indexing"
+    enabled: false
+    rollout_strategy: "gradual"
+
+    rollout:
+      percentage: 5
+      increment_by: 5
+      increment_interval_hours: 48
+
+    targeting:
+      user_ids: []  # Specific user IDs for early access
+      user_tiers: ["enterprise"]
+      regions: ["us-east-1"]
+
+    variants:
+      control:
+        name: "Current Algorithm"
+        weight: 90
+
+      treatment:
+        name: "HNSW Index"
+        weight: 10
+        config:
+          index_type: "hnsw"
+          ef_construction: 200
+          m_connections: 16
+
+    monitoring:
+      metrics:
+        - name: "search_latency_p95"
+          threshold: 100  # ms
+        - name: "search_accuracy"
+          threshold: 0.95
+
+  # Advanced caching layer
+  - name: "advanced_caching"
+    description: "Multi-tier caching with intelligent invalidation"
+    enabled: false
+    rollout_strategy: "user_segment"
+
+    targeting:
+      user_segments:
+        - name: "power_users"
+          criteria:
+            - "query_count_per_day > 1000"
+
+        - name: "api_clients"
+          criteria:
+            - "client_type == 'api'"
+
+    config:
+      cache_levels: 3
+      l1_size_mb: 256
+      l2_size_mb: 1024
+      l3_backend: "redis"
+
+    monitoring:
+      metrics:
+        - "cache_hit_rate"
+        - "cache_memory_usage"
+        - "cache_eviction_rate"
+
+  # Transaction isolation improvements
+  - name: "serializable_snapshot_isolation"
+    description: "Stronger isolation guarantees for transactions"
+    enabled: false
+    rollout_strategy: "opt_in"
+
+    targeting:
+      opt_in_required: true
+      environments: ["staging"]
+
+    config:
+      isolation_level: "serializable_snapshot"
+      conflict_detection: "optimistic"
+      retry_limit: 3
+
+  # Query result streaming
+  - name: "result_streaming"
+    description: "Stream large query results instead of buffering"
+    enabled: true  # Fully rolled out
+    rollout_strategy: "full"
+
+    config:
+      chunk_size: 1000
+      compression: "gzip"
+      timeout_seconds: 300
+
+  # Dark mode UI
+  - name: "dark_mode_ui"
+    description: "Dark mode for admin dashboard"
+    enabled: true
+    rollout_strategy: "full"
+
+  # Experimental SQL parser
+  - name: "experimental_sql_parser"
+    description: "New SQL parser with better error messages"
+    enabled: false
+    rollout_strategy: "internal_only"
+
+    targeting:
+      internal_only: true
+      user_emails:
+        - "*@latticedb.com"
+
+# A/B Testing experiments
+experiments:
+  # Experiment 1: Query execution strategies
+  - name: "query_execution_strategy"
+    description: "Test different query execution strategies"
+    enabled: true
+    start_date: "2025-01-01T00:00:00Z"
+    end_date: "2025-02-01T00:00:00Z"
+
+    variants:
+      - name: "control"
+        description: "Current volcano-based execution"
+        weight: 50
+        config:
+          execution_model: "volcano"
+
+      - name: "vectorized"
+        description: "Vectorized execution engine"
+        weight: 25
+        config:
+          execution_model: "vectorized"
+          batch_size: 1024
+
+      - name: "compiled"
+        description: "JIT-compiled execution"
+        weight: 25
+        config:
+          execution_model: "compiled"
+          compiler: "llvm"
+
+    targeting:
+      user_sample_percentage: 20
+      min_user_count: 1000
+
+    success_metrics:
+      primary: "query_execution_time_ms"
+      secondary:
+        - "cpu_usage_percent"
+        - "memory_usage_mb"
+
+    statistical_significance:
+      confidence_level: 0.95
+      min_sample_size: 10000
+
+  # Experiment 2: Connection pooling strategies
+  - name: "connection_pool_strategy"
+    description: "Test different connection pooling approaches"
+    enabled: true
+    start_date: "2025-01-15T00:00:00Z"
+    end_date: "2025-02-15T00:00:00Z"
+
+    variants:
+      - name: "control"
+        weight: 60
+        config:
+          pool_type: "fixed"
+          min_connections: 10
+          max_connections: 100
+
+      - name: "dynamic"
+        weight: 40
+        config:
+          pool_type: "dynamic"
+          min_connections: 5
+          max_connections: 200
+          scale_up_threshold: 0.8
+          scale_down_threshold: 0.2
+
+    success_metrics:
+      primary: "connection_wait_time_ms"
+      secondary:
+        - "connection_pool_utilization"
+        - "connection_errors_total"
+
+# Kill switches (emergency disable)
+kill_switches:
+  enabled: true
+
+  switches:
+    - name: "disable_new_features"
+      description: "Disable all new features in emergency"
+      affects:
+        - "new_query_optimizer"
+        - "vector_search_v2"
+        - "advanced_caching"
+
+    - name: "disable_experimental"
+      description: "Disable experimental features"
+      affects:
+        - "experimental_sql_parser"
+
+  activation:
+    manual: true
+    automatic_conditions:
+      - "error_rate > 0.20"
+      - "p99_latency > 5000"
+
+# Feature flag analytics
+analytics:
+  enabled: true
+
+  track_events:
+    - "flag_evaluated"
+    - "variant_assigned"
+    - "flag_toggled"
+    - "experiment_started"
+    - "experiment_completed"
+
+  export_to:
+    - type: "cloudwatch"
+      namespace: "LatticeDB/FeatureFlags"
+
+    - type: "datadog"
+      enabled: false
+
+  reporting:
+    daily_summary: true
+    weekly_report: true
+
+# Audit logging
+audit:
+  enabled: true
+  log_all_evaluations: false
+  log_flag_changes: true
+  log_experiment_events: true
+
+  retention_days: 90
+
+# SDK configuration
+sdk:
+  polling_interval_seconds: 60
+  timeout_seconds: 5
+  retry_attempts: 3
+
+  # Local evaluation for performance
+  local_evaluation: true
+  cache_flags: true
