@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LatticeDB - Next-Gen Relational Database Management System</title>
+    <meta name="description" content="A feature-complete, high-performance RDBMS with native AI/ML support, time-travel queries, streaming statistics, and enterprise security.">
+    <link rel="stylesheet" href="packages/styles.css">
+    <link rel="icon" type="image/png" href="packages/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo">🔷</span>
+                <span class="brand-name">LatticeDB</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#quickstart">Quick Start</a></li>
+                <li><a href="#deployment">Deployment</a></li>
+                <li><a href="#docs">Documentation</a></li>
+                <li><a href="https://github.com/hoangsonww/LatticeDB-DBMS" target="_blank" class="btn-github">GitHub</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div class="scroll-progress-bar"></div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Next-Generation RDBMS</div>
+                <h1 class="hero-title">
+                    Modern Database for
+                    <span class="gradient-text">AI & Analytics</span>
+                </h1>
+                <p class="hero-subtitle">
+                    A feature-complete, high-performance RDBMS with native AI/ML support,
+                    time-travel queries, adaptive compression, and enterprise security—all in one unified engine.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#quickstart" class="btn btn-primary">Get Started</a>
+                    <a href="#features" class="btn btn-secondary">Explore Features</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">50K+</div>
+                        <div class="stat-label">Lines of C++</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">95%+</div>
+                        <div class="stat-label">Test Coverage</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">10K+</div>
+                        <div class="stat-label">QPS</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">100GB+</div>
+                        <div class="stat-label">Tested Data</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section id="overview" class="section">
+        <div class="container">
+            <h2 class="section-title">Why LatticeDB?</h2>
+            <p class="section-subtitle">
+                Built from scratch in modern C++17, LatticeDB combines traditional database capabilities
+                with cutting-edge features that major RDBMS don't provide natively out-of-the-box.
+            </p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Complete SQL Support</h3>
+                    <p>Full SQL parser with DDL, DML, DCL, TCL. JOINs (INNER, LEFT, RIGHT), GROUP BY,
+                       aggregates (COUNT, SUM, AVG, MIN, MAX), subqueries, and CTEs all fully implemented.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⏰</div>
+                    <h3>Time Travel Queries</h3>
+                    <p>Built-in temporal support with <code>FOR SYSTEM_TIME AS OF</code> syntax.
+                       Query historical data at any point in time with bitemporal architecture.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>Native Vector Search</h3>
+                    <p>Fully implemented vector engine with Flat, HNSW, IVF algorithms and multiple
+                       distance metrics (L2, Cosine, Dot Product) for AI/ML workloads.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Enterprise Security</h3>
+                    <p>Row-level security, column encryption (AES-256-GCM, ChaCha20), authentication
+                       (password, JWT, certificates), and comprehensive audit logging.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h3>Advanced Storage</h3>
+                    <p>Professional buffer pool manager with LRU/Clock replacement, B+ Tree indexes,
+                       Write-Ahead Logging (WAL), and ARIES recovery.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>ACID Transactions</h3>
+                    <p>Full MVCC implementation with multiple isolation levels, 2PL protocol,
+                       deadlock detection, and savepoints for reliable transactions.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🗜️</div>
+                    <h3>Adaptive Compression</h3>
+                    <p>Working compression engine with RLE, Dictionary, Delta, Bit-packing, LZ4,
+                       and ZSTD algorithms for optimal storage efficiency.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Stream Processing</h3>
+                    <p>Real-time continuous queries with windowing functions for streaming analytics
+                       and materialized views with backfill support.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Comparison -->
+    <section id="features" class="section section-dark">
+        <div class="container">
+            <h2 class="section-title">Feature Matrix</h2>
+            <p class="section-subtitle">
+                LatticeDB provides features that major RDBMS generally don't offer natively,
+                all unified in a single coherent engine.
+            </p>
+
+            <div class="comparison-table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Capability</th>
+                            <th>LatticeDB</th>
+                            <th>PostgreSQL</th>
+                            <th>MySQL</th>
+                            <th>SQL Server</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Full SQL with JOINs, GROUP BY</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="check">✅ Built-in</td>
+                        </tr>
+                        <tr>
+                            <td>Time Travel (FOR SYSTEM_TIME)</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="partial">Via extensions</td>
+                            <td class="partial">Limited</td>
+                            <td class="partial">Temporal tables</td>
+                        </tr>
+                        <tr>
+                            <td>Native Vector Search</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="partial">pgvector ext</td>
+                            <td class="partial">Via plugins</td>
+                            <td class="cross">Limited</td>
+                        </tr>
+                        <tr>
+                            <td>Row-Level Security</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="partial">Via views</td>
+                            <td class="check">✅ Built-in</td>
+                        </tr>
+                        <tr>
+                            <td>Column Encryption</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="partial">Via extensions</td>
+                            <td class="partial">TDE only</td>
+                            <td class="check">Always Encrypted</td>
+                        </tr>
+                        <tr>
+                            <td>Adaptive Compression</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="partial">Basic</td>
+                            <td class="partial">Basic</td>
+                            <td class="check">Advanced</td>
+                        </tr>
+                        <tr>
+                            <td>Stream Processing</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="partial">Via extensions</td>
+                            <td class="partial">Via binlog</td>
+                            <td class="partial">CDC</td>
+                        </tr>
+                        <tr>
+                            <td>Custom Merge Policies (CRDTs)</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="cross">Third-party</td>
+                            <td class="cross">Third-party</td>
+                            <td class="cross">Third-party</td>
+                        </tr>
+                        <tr>
+                            <td>Built-in Web GUI</td>
+                            <td class="check">✅ Built-in</td>
+                            <td class="cross">Third-party</td>
+                            <td class="cross">Third-party</td>
+                            <td class="cross">Third-party</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="section">
+        <div class="container">
+            <h2 class="section-title">System Architecture</h2>
+            <p class="section-subtitle">
+                Modular, layered architecture with clear separation of concerns for extensibility and maintainability.
+            </p>
+
+            <div class="architecture-diagram">
+                <pre class="mermaid">
+flowchart TD
+    subgraph "Client Layer"
+        GUI[Web GUI]
+        CLI[CLI Client]
+        SDK[SDKs]
+    end
+
+    subgraph "Query Engine"
+        PARSE[SQL Parser]
+        OPT[Query Optimizer]
+        EXEC[Executor]
+    end
+
+    subgraph "Storage Layer"
+        MVCC[MVCC Controller]
+        ULS[Universal Log Store]
+        IDX[B+ Tree & Vector Indexes]
+    end
+
+    subgraph "CRDT Engine"
+        LWW[LWW Register]
+        GSET[G-Set]
+        COUNTER[PN-Counter]
+    end
+
+    subgraph "Security & Privacy"
+        RLS[Row-Level Security]
+        DP[Differential Privacy]
+        AUDIT[Audit Logger]
+    end
+
+    GUI --> PARSE
+    CLI --> PARSE
+    SDK --> PARSE
+    PARSE --> OPT
+    OPT --> EXEC
+    EXEC --> MVCC
+    MVCC --> ULS
+    ULS --> IDX
+    EXEC --> RLS
+    EXEC --> DP
+    EXEC --> AUDIT
+    ULS --> LWW
+    ULS --> GSET
+    ULS --> COUNTER
+                </pre>
+            </div>
+
+            <div class="architecture-layers">
+                <div class="layer-card">
+                    <h3>Query Processing Pipeline</h3>
+                    <div class="mermaid">
+flowchart LR
+    SQL[SQL Query] --> Parser[Parser]
+    Parser --> AST[AST]
+    AST --> Analyzer[Analyzer]
+    Analyzer --> Planner[Planner]
+    Planner --> Optimizer[Optimizer]
+    Optimizer --> Plan[Execution Plan]
+    Plan --> Executor[Executor]
+    Executor --> Result[Results]
+                    </div>
+                    <p>Full SQL support with recursive descent parser, cost-based optimizer, and volcano-style execution.</p>
+                </div>
+
+                <div class="layer-card">
+                    <h3>Transaction & Concurrency</h3>
+                    <div class="mermaid">
+stateDiagram-v2
+    [*] --> GROWING: BEGIN
+    GROWING --> SHRINKING: Lock Acquired
+    SHRINKING --> COMMITTED: COMMIT
+    SHRINKING --> ABORTED: ROLLBACK
+    COMMITTED --> [*]
+    ABORTED --> [*]
+                    </div>
+                    <p>MVCC with 2PL locking, multiple isolation levels, and automatic deadlock detection.</p>
+                </div>
+
+                <div class="layer-card">
+                    <h3>Vector Search Engine</h3>
+                    <div class="mermaid">
+flowchart TD
+    Query[Vector Query] --> Engine[Vector Engine]
+    Engine --> Algo{Algorithm}
+    Algo --> Flat[Flat/Brute Force]
+    Algo --> HNSW[HNSW Graph]
+    Algo --> IVF[IVF Index]
+    Flat --> Results[Top-K Results]
+    HNSW --> Results
+    IVF --> Results
+                    </div>
+                    <p>Multiple algorithms and distance metrics for efficient similarity search in high-dimensional spaces.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section id="quickstart" class="section section-dark">
+        <div class="container">
+            <h2 class="section-title">Quick Start</h2>
+            <p class="section-subtitle">Get LatticeDB up and running in minutes</p>
+
+            <div class="quickstart-tabs">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="build">Build from Source</button>
+                    <button class="tab-btn" data-tab="docker">Docker</button>
+                    <button class="tab-btn" data-tab="gui">Web GUI</button>
+                    <button class="tab-btn" data-tab="examples">Examples</button>
+                </div>
+
+                <div class="tab-content active" id="build">
+                    <h3>Prerequisites</h3>
+                    <ul style="margin-left: 20px">
+                        <li>C++17 toolchain (clang++/g++)</li>
+                        <li>CMake ≥ 3.15</li>
+                        <li>Linux/macOS/WSL2</li>
+                    </ul>
+
+                    <h3 style="margin-top: 1rem">Build Instructions</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" data-code="build-code">Copy</button>
+                        <pre><code id="build-code"># Clone repository
+git clone https://github.com/hoangsonww/LatticeDB-DBMS.git
+cd LatticeDB-DBMS
+
+# Build
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
+
+# Launch CLI
+./latticedb</code></pre>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="docker">
+                    <h3>Using Docker</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" data-code="docker-code">Copy</button>
+                        <pre><code id="docker-code"># Build Docker image
+docker build -t latticedb .
+
+# Run container
+docker run -it --rm -v $(pwd)/data:/data latticedb
+
+# Or use docker-compose
+docker-compose up -d</code></pre>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="gui">
+                    <h3>Start the Web GUI</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" data-code="gui-code">Copy</button>
+                        <pre><code id="gui-code"># Start the database server
+./build/latticedb_server
+
+# In a new terminal, start the GUI
+cd gui
+npm install
+npm run dev
+
+# Open http://localhost:5173</code></pre>
+                    </div>
+                    <p>The GUI includes SQL editor, schema browser, query history, and dark/light modes.</p>
+                </div>
+
+                <div class="tab-content" id="examples">
+                    <h3>Example Queries</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" data-code="example-code">Copy</button>
+                        <pre><code id="example-code">-- Create table
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(255) UNIQUE
+);
+
+-- Insert data
+INSERT INTO users VALUES (1, 'Alice', 'alice@example.com');
+
+-- Join query
+SELECT u.name, COUNT(o.id) as order_count
+FROM users u
+INNER JOIN orders o ON u.id = o.user_id
+GROUP BY u.id, u.name;
+
+-- Time travel query
+SELECT * FROM orders
+FOR SYSTEM_TIME AS OF TX 5;
+
+-- Vector search
+SELECT * FROM embeddings
+WHERE distance(vector, [0.1, 0.2, ...]) < 0.5
+ORDER BY distance(vector, [0.1, 0.2, ...])
+LIMIT 10;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Deployment Section -->
+    <section id="deployment" class="section">
+        <div class="container">
+            <h2 class="section-title">Production Deployment</h2>
+            <p class="section-subtitle">
+                Deploy to major cloud providers with built-in monitoring and observability
+            </p>
+
+            <div class="deployment-grid">
+                <div class="deployment-card">
+                    <div class="deployment-icon">☁️</div>
+                    <h3>AWS</h3>
+                    <p>ECS Fargate with auto-scaling, EFS storage, and CloudWatch monitoring</p>
+                    <div class="code-block-small">
+                        <pre><code>cd aws && ./deploy.sh</code></pre>
+                    </div>
+                    <ul class="deployment-features">
+                        <li>Application Load Balancer</li>
+                        <li>Auto-scaling groups</li>
+                        <li>EFS persistent storage</li>
+                        <li>CloudWatch logs & metrics</li>
+                    </ul>
+                </div>
+
+                <div class="deployment-card">
+                    <div class="deployment-icon">🌐</div>
+                    <h3>Azure</h3>
+                    <p>Container Apps with serverless scaling and Azure Files integration</p>
+                    <div class="code-block-small">
+                        <pre><code>cd azure && ./deploy.sh</code></pre>
+                    </div>
+                    <ul class="deployment-features">
+                        <li>Serverless containers</li>
+                        <li>Automatic HTTPS</li>
+                        <li>Azure Files storage</li>
+                        <li>Application Insights</li>
+                    </ul>
+                </div>
+
+                <div class="deployment-card">
+                    <div class="deployment-icon">🚀</div>
+                    <h3>Google Cloud</h3>
+                    <p>Cloud Run with global load balancing and Cloud SQL</p>
+                    <div class="code-block-small">
+                        <pre><code>cd gcp && ./deploy.sh</code></pre>
+                    </div>
+                    <ul class="deployment-features">
+                        <li>Fully managed serverless</li>
+                        <li>Global load balancer</li>
+                        <li>Cloud Storage integration</li>
+                        <li>Cloud Monitoring</li>
+                    </ul>
+                </div>
+
+                <div class="deployment-card">
+                    <div class="deployment-icon">🏗️</div>
+                    <h3>HashiCorp Stack</h3>
+                    <p>Nomad orchestration with Consul service mesh and Vault secrets</p>
+                    <div class="code-block-small">
+                        <pre><code>cd hashicorp && ./deploy.sh</code></pre>
+                    </div>
+                    <ul class="deployment-features">
+                        <li>Service mesh (Consul)</li>
+                        <li>Secret management (Vault)</li>
+                        <li>Orchestration (Nomad)</li>
+                        <li>On-premises ready</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="monitoring-section">
+                <h3>Built-in Monitoring & Observability</h3>
+                <div class="monitoring-grid">
+                    <div class="monitoring-item">
+                        <span class="monitoring-icon">📊</span>
+                        <h4>Prometheus Metrics</h4>
+                        <p>Request rates, response times, database performance</p>
+                    </div>
+                    <div class="monitoring-item">
+                        <span class="monitoring-icon">📈</span>
+                        <h4>Grafana Dashboards</h4>
+                        <p>Real-time visualization and custom dashboards</p>
+                    </div>
+                    <div class="monitoring-item">
+                        <span class="monitoring-icon">🚨</span>
+                        <h4>Intelligent Alerting</h4>
+                        <p>PagerDuty, Slack, and email notifications</p>
+                    </div>
+                    <div class="monitoring-item">
+                        <span class="monitoring-icon">🔍</span>
+                        <h4>Distributed Tracing</h4>
+                        <p>Jaeger and OpenTelemetry integration</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="docs" class="section section-dark">
+        <div class="container">
+            <h2 class="section-title">Documentation</h2>
+            <p class="section-subtitle">Comprehensive guides and references</p>
+
+            <div class="docs-grid">
+                <a href="#" class="doc-card">
+                    <div class="doc-icon">📖</div>
+                    <h3>Getting Started</h3>
+                    <p>Installation, configuration, and first steps</p>
+                </a>
+
+                <a href="#" class="doc-card">
+                    <div class="doc-icon">🏗️</div>
+                    <h3>Architecture</h3>
+                    <p>System design, components, and internals</p>
+                </a>
+
+                <a href="#" class="doc-card">
+                    <div class="doc-icon">📝</div>
+                    <h3>SQL Reference</h3>
+                    <p>Complete SQL syntax and extensions</p>
+                </a>
+
+                <a href="#" class="doc-card">
+                    <div class="doc-icon">🔐</div>
+                    <h3>Security Guide</h3>
+                    <p>Authentication, authorization, and encryption</p>
+                </a>
+
+                <a href="#" class="doc-card">
+                    <div class="doc-icon">⚡</div>
+                    <h3>Performance Tuning</h3>
+                    <p>Optimization, indexing, and benchmarking</p>
+                </a>
+
+                <a href="#" class="doc-card">
+                    <div class="doc-icon">🚀</div>
+                    <h3>Deployment Guide</h3>
+                    <p>Production deployment and operations</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Benchmarks -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Performance Benchmarks</h2>
+            <p class="section-subtitle">Competitive performance on OLTP workloads</p>
+
+            <div class="benchmark-table-wrapper">
+                <table class="benchmark-table">
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>LatticeDB</th>
+                            <th>PostgreSQL</th>
+                            <th>MySQL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Q1 (Scan+Aggregate)</td>
+                            <td class="best">1.2s</td>
+                            <td>1.5s</td>
+                            <td>2.1s</td>
+                        </tr>
+                        <tr>
+                            <td>Q3 (Join)</td>
+                            <td class="best">2.1s</td>
+                            <td>2.3s</td>
+                            <td>3.2s</td>
+                        </tr>
+                        <tr>
+                            <td>Q5 (5-way Join)</td>
+                            <td class="best">3.2s</td>
+                            <td>3.5s</td>
+                            <td>4.8s</td>
+                        </tr>
+                        <tr>
+                            <td>Insert 1M rows</td>
+                            <td class="best">8.5s</td>
+                            <td>9.2s</td>
+                            <td>11.3s</td>
+                        </tr>
+                        <tr>
+                            <td>Vector Search (1M, 768D)</td>
+                            <td class="best">&lt;100ms</td>
+                            <td>~150ms</td>
+                            <td>N/A</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="benchmark-notes">
+                <p><strong>Test Environment:</strong> AWS c5.4xlarge (16 vCPU, 32GB RAM), TPC-H SF-10 dataset</p>
+                <p><strong>Note:</strong> Performance may vary based on workload, hardware, and configuration</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Section -->
+    <section class="section section-dark">
+        <div class="container">
+            <h2 class="section-title">Join the Community</h2>
+            <p class="section-subtitle">Contribute, learn, and grow with LatticeDB</p>
+
+            <div class="community-grid">
+                <div class="community-card">
+                    <div class="community-icon">💻</div>
+                    <h3>Contribute</h3>
+                    <p>Help improve LatticeDB by contributing code, documentation, or bug reports</p>
+                    <a href="https://github.com/hoangsonww/LatticeDB-DBMS" class="community-link">View on GitHub →</a>
+                </div>
+
+                <div class="community-card">
+                    <div class="community-icon">📚</div>
+                    <h3>Learn</h3>
+                    <p>Explore tutorials, examples, and best practices</p>
+                    <a href="#docs" class="community-link">Read Documentation →</a>
+                </div>
+
+                <div class="community-card">
+                    <div class="community-icon">🤝</div>
+                    <h3>Support</h3>
+                    <p>Get help from the community and maintainers</p>
+                    <a href="https://github.com/hoangsonww/LatticeDB-DBMS/issues" class="community-link">Open an Issue →</a>
+                </div>
+            </div>
+
+            <div class="license-section">
+                <h3>Open Source</h3>
+                <p>LatticeDB is released under the MIT License. Free to use in commercial and personal projects.</p>
+                <div class="tech-badges">
+                    <span class="badge">C++17</span>
+                    <span class="badge">CMake</span>
+                    <span class="badge">React</span>
+                    <span class="badge">TypeScript</span>
+                    <span class="badge">Docker</span>
+                    <span class="badge">Terraform</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>LatticeDB</h4>
+                    <p>Next-Generation Relational Database Management System</p>
+                    <div class="social-links">
+                        <a href="https://github.com/hoangsonww/LatticeDB-DBMS" target="_blank" aria-label="GitHub">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#docs">Documentation</a></li>
+                        <li><a href="#quickstart">Quick Start</a></li>
+                        <li><a href="#architecture">Architecture</a></li>
+                        <li><a href="https://github.com/hoangsonww/LatticeDB-DBMS/releases">Releases</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/hoangsonww/LatticeDB-DBMS">GitHub</a></li>
+                        <li><a href="https://github.com/hoangsonww/LatticeDB-DBMS/issues">Issues</a></li>
+                        <li><a href="https://github.com/hoangsonww/LatticeDB-DBMS/discussions">Discussions</a></li>
+                        <li><a href="https://github.com/hoangsonww/LatticeDB-DBMS/blob/main/LICENSE">License</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Deploy</h4>
+                    <ul>
+                        <li><a href="#deployment">AWS</a></li>
+                        <li><a href="#deployment">Azure</a></li>
+                        <li><a href="#deployment">Google Cloud</a></li>
+                        <li><a href="#deployment">HashiCorp</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 LatticeDB. Released under the MIT License.</p>
+                <p>Built with ❤️ by the LatticeDB Team</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to top button -->
+    <button class="scroll-to-top" aria-label="Scroll to top">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+        </svg>
+    </button>
+
+    <script src="packages/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+# Chaos Engineering Experiments Configuration
+# Defines systematic resilience testing scenarios
+
+version: "1.0"
+
+# Global settings
+global:
+  enabled: false  # Safety: disabled by default
+  allowed_environments:
+    - staging
+    - development
+  # Never run in production without explicit override
+  block_production: true
+
+  # Experiment scheduling
+  scheduling:
+    enabled: false
+    cron: "0 2 * * 1-5"  # 2 AM weekdays
+    timezone: "UTC"
+
+  # Monitoring during experiments
+  monitoring:
+    enabled: true
+    collect_metrics: true
+    alert_on_failure: true
+
+# Experiment catalog
+experiments:
+  # 1. Instance Termination
+  - name: "terminate_random_instance"
+    category: "availability"
+    severity: "low"
+    description: "Terminates a random service instance to test auto-recovery"
+
+    configuration:
+      target: "ecs_task"  # or ec2_instance, k8s_pod
+      count: 1
+      selection: "random"  # or oldest, newest, specific
+
+    validation:
+      - metric: "service_availability"
+        threshold: 99.0
+        operator: ">"
+      - metric: "recovery_time_seconds"
+        threshold: 60
+        operator: "<"
+
+    rollback:
+      automatic: true
+      conditions:
+        - "service_availability < 95"
+
+  # 2. Network Latency
+  - name: "inject_network_latency"
+    category: "performance"
+    severity: "medium"
+    description: "Injects network latency to test timeout handling"
+
+    configuration:
+      target: "all_instances"
+      latency_ms: 200
+      jitter_ms: 50
+      duration_seconds: 300
+
+    validation:
+      - metric: "p95_latency_ms"
+        threshold: 1000
+        operator: "<"
+      - metric: "error_rate"
+        threshold: 5.0
+        operator: "<"
+
+  # 3. CPU Stress
+  - name: "stress_cpu"
+    category: "resource"
+    severity: "medium"
+    description: "Stresses CPU to test resource limits and scaling"
+
+    configuration:
+      target: "random_instance"
+      cpu_percent: 80
+      duration_seconds: 300
+
+    validation:
+      - metric: "service_availability"
+        threshold: 99.0
+        operator: ">"
+      - metric: "auto_scaling_triggered"
+        threshold: true
+        operator: "=="
+
+  # 4. Memory Pressure
+  - name: "stress_memory"
+    category: "resource"
+    severity: "medium"
+    description: "Creates memory pressure to test OOM handling"
+
+    configuration:
+      target: "random_instance"
+      memory_percent: 85
+      duration_seconds: 300
+
+    validation:
+      - metric: "oom_kills"
+        threshold: 0
+        operator: "=="
+      - metric: "service_availability"
+        threshold: 99.0
+        operator: ">"
+
+  # 5. Disk I/O Stress
+  - name: "stress_disk_io"
+    category: "resource"
+    severity: "high"
+    description: "Stresses disk I/O to test performance under load"
+
+    configuration:
+      target: "random_instance"
+      io_operations_per_second: 10000
+      duration_seconds: 300
+
+    validation:
+      - metric: "disk_latency_ms"
+        threshold: 100
+        operator: "<"
+
+  # 6. Network Partition
+  - name: "create_network_partition"
+    category: "availability"
+    severity: "high"
+    description: "Creates network partition to test split-brain handling"
+
+    configuration:
+      target: "50_percent_of_instances"
+      isolation_type: "bidirectional"
+      duration_seconds: 180
+
+    validation:
+      - metric: "split_brain_detected"
+        threshold: false
+        operator: "=="
+      - metric: "data_consistency"
+        threshold: true
+        operator: "=="
+
+  # 7. DNS Failure
+  - name: "dns_failure"
+    category: "dependency"
+    severity: "high"
+    description: "Simulates DNS failure to test fallback mechanisms"
+
+    configuration:
+      target: "all_instances"
+      failure_rate_percent: 100
+      duration_seconds: 120
+
+    validation:
+      - metric: "service_availability"
+        threshold: 95.0
+        operator: ">"
+
+  # 8. Database Connection Failure
+  - name: "database_connection_failure"
+    category: "dependency"
+    severity: "critical"
+    description: "Simulates database connection failures"
+
+    configuration:
+      target: "database_connections"
+      failure_rate_percent: 50
+      duration_seconds: 180
+
+    validation:
+      - metric: "circuit_breaker_open"
+        threshold: true
+        operator: "=="
+      - metric: "error_rate"
+        threshold: 50.0
+        operator: "<"
+
+  # 9. Packet Loss
+  - name: "inject_packet_loss"
+    category: "performance"
+    severity: "medium"
+    description: "Injects packet loss to test retry mechanisms"
+
+    configuration:
+      target: "all_instances"
+      packet_loss_percent: 5
+      duration_seconds: 300
+
+    validation:
+      - metric: "retry_success_rate"
+        threshold: 95.0
+        operator: ">"
+
+  # 10. Clock Skew
+  - name: "introduce_clock_skew"
+    category: "time"
+    severity: "medium"
+    description: "Introduces clock skew to test time-dependent logic"
+
+    configuration:
+      target: "random_instance"
+      skew_seconds: 300
+      direction: "forward"
+      duration_seconds: 600
+
+    validation:
+      - metric: "timestamp_errors"
+        threshold: 0
+        operator: "=="
+
+  # 11. Certificate Expiry
+  - name: "simulate_cert_expiry"
+    category: "security"
+    severity: "high"
+    description: "Simulates SSL certificate expiry"
+
+    configuration:
+      target: "load_balancer"
+      cert_type: "ssl"
+      duration_seconds: 120
+
+    validation:
+      - metric: "ssl_errors"
+        threshold: true
+        operator: "=="
+      - metric: "fallback_activated"
+        threshold: true
+        operator: "=="
+
+  # 12. Rate Limit Breach
+  - name: "exceed_rate_limits"
+    category: "load"
+    severity: "low"
+    description: "Exceeds rate limits to test throttling"
+
+    configuration:
+      target: "api_endpoint"
+      requests_per_second: 10000
+      duration_seconds: 60
+
+    validation:
+      - metric: "rate_limiting_active"
+        threshold: true
+        operator: "=="
+      - metric: "service_stability"
+        threshold: true
+        operator: "=="
+
+  # 13. Cache Eviction
+  - name: "evict_cache"
+    category: "performance"
+    severity: "low"
+    description: "Evicts cache to test cache miss handling"
+
+    configuration:
+      target: "redis"
+      eviction_percent: 100
+      duration_seconds: 1
+
+    validation:
+      - metric: "cache_miss_rate"
+        threshold: 100.0
+        operator: "=="
+      - metric: "database_load_increase"
+        threshold: 200.0
+        operator: "<"
+
+  # 14. Message Queue Delay
+  - name: "delay_message_queue"
+    category: "integration"
+    severity: "medium"
+    description: "Delays message queue processing"
+
+    configuration:
+      target: "message_queue"
+      delay_ms: 5000
+      duration_seconds: 300
+
+    validation:
+      - metric: "queue_depth"
+        threshold: 10000
+        operator: "<"
+
+  # 15. Gradual Performance Degradation
+  - name: "gradual_degradation"
+    category: "performance"
+    severity: "high"
+    description: "Gradually degrades performance to test detection"
+
+    configuration:
+      target: "all_instances"
+      initial_delay_ms: 50
+      final_delay_ms: 500
+      ramp_duration_seconds: 600
+
+    validation:
+      - metric: "degradation_detected"
+        threshold: true
+        operator: "=="
+      - metric: "alert_triggered"
+        threshold: true
+        operator: "=="
+
+# Experiment schedules
+schedules:
+  # Weekly resilience testing
+  - name: "weekly_resilience_suite"
+    enabled: false
+    schedule: "0 2 * * 1"  # Monday 2 AM
+    experiments:
+      - terminate_random_instance
+      - inject_network_latency
+      - stress_cpu
+
+  # Monthly comprehensive testing
+  - name: "monthly_comprehensive"
+    enabled: false
+    schedule: "0 1 1 * *"  # 1st of month, 1 AM
+    experiments:
+      - terminate_random_instance
+      - inject_network_latency
+      - stress_cpu
+      - stress_memory
+      - create_network_partition
+      - database_connection_failure
+
+# Blast radius controls
+blast_radius:
+  # Limit impact of experiments
+  max_affected_instances_percent: 25
+  max_affected_regions: 1
+  max_concurrent_experiments: 2
+
+  # Safety checks
+  abort_conditions:
+    - "error_rate > 10"
+    - "service_availability < 95"
+    - "customer_impact_detected == true"
+
+# Reporting
+reporting:
+  enabled: true
+
+  outputs:
+    - type: "slack"
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+
+    - type: "cloudwatch"
+      namespace: "LatticeDB/ChaosEngineering"
+
+    - type: "s3"
+      bucket: "latticedb-chaos-reports"
+      prefix: "experiments/"
+
+  metrics:
+    - experiment_duration
+    - blast_radius
+    - validation_results
+    - recovery_time
+    - customer_impact
+
+# Learning and improvement
+learning:
+  # Automatically adjust experiment parameters based on results
+  adaptive: true
+
+  # Increase experiment severity if system handles them well
+  progressive_difficulty: true
+
+  # Track improvements over time
+  track_mttr: true  # Mean Time To Recovery
+  track_mtbf: true  # Mean Time Between Failures

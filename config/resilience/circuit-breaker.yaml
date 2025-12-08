@@ -1,0 +1,165 @@
+# Circuit Breaker Configuration for LatticeDB
+# Implements resilience patterns to prevent cascade failures
+
+version: "1.0"
+
+# Global circuit breaker settings
+global:
+  enabled: true
+  default_threshold: 50  # Percentage of failures before opening circuit
+  default_timeout: 30000  # Time in ms before attempting to close circuit
+  default_volume_threshold: 10  # Minimum number of requests before circuit can open
+  monitoring_window: 60000  # Rolling window for metrics in ms
+
+# Service-specific circuit breakers
+services:
+  # Database connection pool circuit breaker
+  database:
+    enabled: true
+    failure_threshold_percentage: 50
+    request_volume_threshold: 20
+    sleep_window_ms: 30000
+    error_threshold_percentage: 50
+    timeout_ms: 5000
+
+    # Errors that should trigger circuit breaker
+    trigger_errors:
+      - ConnectionTimeout
+      - ConnectionRefused
+      - PoolExhausted
+      - DatabaseUnavailable
+
+    # Fallback strategy
+    fallback:
+      enabled: true
+      strategy: "cached_response"  # Options: cached_response, default_value, error
+      cache_ttl_seconds: 60
+
+    # Half-open state configuration
+    half_open:
+      max_attempts: 5
+      success_threshold: 3  # Number of successes needed to close circuit
+
+  # External API circuit breaker
+  external_api:
+    enabled: true
+    failure_threshold_percentage: 60
+    request_volume_threshold: 10
+    sleep_window_ms: 60000
+    timeout_ms: 10000
+
+    trigger_errors:
+      - RequestTimeout
+      - ServiceUnavailable
+      - TooManyRequests
+
+    fallback:
+      enabled: true
+      strategy: "default_value"
+
+    half_open:
+      max_attempts: 3
+      success_threshold: 2
+
+  # Internal microservice circuit breaker
+  internal_services:
+    enabled: true
+    failure_threshold_percentage: 40
+    request_volume_threshold: 15
+    sleep_window_ms: 20000
+    timeout_ms: 3000
+
+    fallback:
+      enabled: true
+      strategy: "cached_response"
+      cache_ttl_seconds: 120
+
+  # File system operations circuit breaker
+  filesystem:
+    enabled: true
+    failure_threshold_percentage: 70
+    request_volume_threshold: 5
+    sleep_window_ms: 15000
+    timeout_ms: 2000
+
+    trigger_errors:
+      - DiskFull
+      - IOError
+      - PermissionDenied
+
+# Monitoring and alerting
+monitoring:
+  enabled: true
+
+  # Metrics to collect
+  metrics:
+    - circuit_state  # open, closed, half_open
+    - failure_rate
+    - success_rate
+    - request_count
+    - rejection_count
+    - mean_response_time
+    - error_percentage
+
+  # Export to monitoring systems
+  exporters:
+    prometheus:
+      enabled: true
+      port: 9090
+      path: /metrics
+      namespace: latticedb_circuit_breaker
+
+    cloudwatch:
+      enabled: true
+      namespace: LatticeDB/CircuitBreaker
+      region: us-east-1
+
+  # Alerts
+  alerts:
+    - name: circuit_breaker_open
+      condition: circuit_state == "open"
+      severity: critical
+      notification_channels:
+        - slack
+        - pagerduty
+
+    - name: circuit_breaker_half_open
+      condition: circuit_state == "half_open"
+      severity: warning
+      notification_channels:
+        - slack
+
+    - name: high_failure_rate
+      condition: failure_rate > 25
+      severity: warning
+      notification_channels:
+        - slack
+
+# Testing and chaos engineering
+testing:
+  enabled: true
+
+  # Chaos monkey - randomly open circuits for testing
+  chaos_mode:
+    enabled: false
+    probability: 0.01  # 1% chance of random circuit opening
+    duration_ms: 10000
+
+  # Manual circuit control for testing
+  manual_control:
+    enabled: true
+    api_endpoint: /admin/circuit-breaker
+
+# Logging
+logging:
+  enabled: true
+  level: info  # debug, info, warn, error
+
+  # Log circuit state changes
+  log_state_changes: true
+
+  # Log rejected requests
+  log_rejections: true
+
+  # Log recovery attempts
+  log_recovery_attempts: true
