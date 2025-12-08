@@ -223,6 +223,14 @@ code {
     width: 100%;
 }
 
+.nav-menu a.active {
+    color: var(--primary-color);
+}
+
+.nav-menu a.active::after {
+    width: 100%;
+}
+
 .btn-github {
     background: var(--gradient-primary);
     color: white !important;
@@ -259,8 +267,10 @@ code {
     height: 3px;
     background: var(--gradient-primary);
     width: 0%;
-    transition: width 0.1s ease;
     z-index: 1001;
+    transform: translateZ(0);
+    will-change: width;
+    -webkit-transform: translateZ(0);
 }
 
 /* ===========================
@@ -1042,7 +1052,7 @@ code {
     h2 { font-size: 2rem; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
     .nav-menu {
         position: fixed;
         top: 70px;
@@ -1054,6 +1064,8 @@ code {
         box-shadow: var(--shadow-lg);
         transition: left 0.3s ease;
         z-index: 999;
+        height: calc(100vh - 70px);
+        overflow-y: auto;
     }
     
     .nav-menu.active {
@@ -1062,6 +1074,26 @@ code {
     
     .mobile-menu-toggle {
         display: flex;
+    }
+    
+    .nav-menu li {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .nav-menu a {
+        display: block;
+        padding: var(--spacing-md) 0;
+        font-size: 1.1rem;
+    }
+    
+    .nav-menu a::after {
+        display: none;
+    }
+    
+    .nav-menu a.active {
+        background: rgba(79, 70, 229, 0.1);
+        border-radius: var(--radius-md);
     }
     
     .hero-title {
