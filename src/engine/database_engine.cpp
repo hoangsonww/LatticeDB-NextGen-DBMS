@@ -1,6 +1,8 @@
 #include "database_engine.h"
+#include "../common/config.h"
 #include "../common/exception.h"
 #include "../common/result.h"
+#include "../diagnostics/system_info.h"
 #include <map>
 
 namespace latticedb {
@@ -32,6 +34,16 @@ bool DatabaseEngine::initialize() {
   query_planner_ = std::make_unique<QueryPlanner>(catalog_.get());
   sql_parser_ = std::make_unique<SQLParser>();
   transaction_context_ = std::make_unique<TransactionContext>();
+
+  if (!g_diagnostics) {
+    g_diagnostics = std::make_unique<SystemDiagnostics>();
+  }
+  auto info = g_diagnostics->get_database_info();
+  info.buffer_pool_size = BUFFER_POOL_SIZE;
+  info.page_size = PAGE_SIZE;
+  info.wal_enabled = enable_logging_;
+  info.storage_path = database_file_;
+  g_diagnostics->update_database_info(info);
   return true;
 }
 
@@ -79,6 +91,8 @@ bool DatabaseEngine::commit_transaction(Transaction* txn) {
   if (!txn)
     return false;
   transaction_context_->commit(txn);
+  if (g_diagnostics)
+    g_diagnostics->record_transaction_commit();
   return true;
 }
 
@@ -86,6 +100,8 @@ bool DatabaseEngine::abort_transaction(Transaction* txn) {
   if (!txn)
     return false;
   transaction_context_->abort(txn);
+  if (g_diagnostics)
+    g_diagnostics->record_transaction_abort();
   return true;
 }
 
