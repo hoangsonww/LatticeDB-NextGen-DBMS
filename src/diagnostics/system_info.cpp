@@ -256,6 +256,11 @@ std::string SystemDiagnostics::export_text_report() const {
   return ss.str();
 }
 
+void SystemDiagnostics::update_database_info(const DatabaseInfo& info) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  db_info_ = info;
+}
+
 void SystemDiagnostics::reset_metrics() {
   std::lock_guard<std::mutex> lock(mutex_);
   metrics_ = PerformanceMetrics();

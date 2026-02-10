@@ -1,4 +1,5 @@
 #include "src/common/logger.h"
+#include "src/diagnostics/system_info.h"
 #include "src/engine/database_engine.h"
 #include <algorithm>
 #include <chrono>
@@ -57,6 +58,9 @@ public:
     if (current_transaction_) {
       db_engine_->abort_transaction(current_transaction_);
     }
+    if (g_diagnostics) {
+      g_diagnostics->record_connection_close();
+    }
   }
 
   bool initialize() {
@@ -66,6 +70,10 @@ public:
       std::cerr << color(Color::RED) << "Error: Failed to initialize database engine"
                 << Color::RESET << std::endl;
       return false;
+    }
+
+    if (g_diagnostics) {
+      g_diagnostics->record_connection_open();
     }
 
     // Disable file logging for CLI
@@ -133,6 +141,7 @@ private:
     std::cout << "  .export <file>           Export database to SQL file\n";
     std::cout << "  .timing on|off           Enable/disable query timing\n";
     std::cout << "  .color on|off            Enable/disable colored output\n";
+    std::cout << "  .diagnostics [fmt] [out] Show diagnostics report or export it\n";
     std::cout << "  .clear                   Clear the screen\n";
     std::cout << "  .history                 Show command history\n";
     std::cout << "\n";
@@ -228,7 +237,7 @@ private:
            cmd == "tables" || cmd == "dt" || cmd == "schema" || cmd == "d" ||
            cmd == "indexes" || cmd == "di" || cmd == "import" || cmd == "export" ||
            cmd == "timing" || cmd == "color" || cmd == "clear" || cmd == "c" ||
-           cmd == "history";
+           cmd == "history" || cmd == "diagnostics" || cmd == "diag";
   }
 
   void process_meta_command(const std::string& input) {
@@ -275,6 +284,13 @@ private:
       clear_screen();
     } else if (cmd == "history") {
       show_history();
+    } else if (cmd == "diagnostics" || cmd == "diag") {
+      std::vector<std::string> args;
+      std::string token;
+      while (iss >> token) {
+        args.push_back(token);
+      }
+      show_diagnostics(args);
     } else {
       std::cout << color(Color::RED) << "Unknown meta command: " << cmd << Color::RESET << "\n";
       std::cout << "Type '.help' for available commands.\n";
@@ -302,6 +318,10 @@ private:
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    if (g_diagnostics) {
+      g_diagnostics->record_query_execution(static_cast<double>(duration.count()));
+    }
 
     // Display results
     if (result.success) {
@@ -672,6 +692,70 @@ private:
 #else
     system("clear");
 #endif
+  }
+
+  void show_diagnostics(const std::vector<std::string>& args) {
+    if (!g_diagnostics) {
+      g_diagnostics = std::make_unique<SystemDiagnostics>();
+    }
+
+    if (args.size() > 2) {
+      std::cout << "Usage: .diagnostics [json|text] [output_file]\n";
+      return;
+    }
+
+    std::string format = "text";
+    std::string output_path;
+
+    if (!args.empty()) {
+      std::string first = args[0];
+      std::string first_lower = first;
+      std::transform(first_lower.begin(), first_lower.end(), first_lower.begin(), ::tolower);
+
+      if (first_lower == "json") {
+        format = "json";
+        if (args.size() == 2) {
+          output_path = args[1];
+        }
+      } else if (first_lower == "text" || first_lower == "txt") {
+        format = "text";
+        if (args.size() == 2) {
+          output_path = args[1];
+        }
+      } else {
+        output_path = first;
+        if (args.size() == 2) {
+          std::string second_lower = args[1];
+          std::transform(second_lower.begin(), second_lower.end(), second_lower.begin(), ::tolower);
+          if (second_lower == "json") {
+            format = "json";
+          } else if (second_lower == "text" || second_lower == "txt") {
+            format = "text";
+          } else {
+            std::cout << "Unknown diagnostics format: " << args[1] << "\n";
+            std::cout << "Usage: .diagnostics [json|text] [output_file]\n";
+            return;
+          }
+        }
+      }
+    }
+
+    std::string report =
+        (format == "json") ? g_diagnostics->export_json_report() : g_diagnostics->export_text_report();
+
+    if (!output_path.empty()) {
+      std::ofstream ofs(output_path);
+      if (!ofs.is_open()) {
+        std::cout << color(Color::RED) << "Failed to write diagnostics to '" << output_path << "'."
+                  << Color::RESET << "\n";
+        return;
+      }
+      ofs << report;
+      std::cout << color(Color::GREEN) << "Diagnostics report saved to '" << output_path << "'."
+                << Color::RESET << "\n";
+    } else {
+      std::cout << report << "\n";
+    }
   }
 
   void show_history() {
