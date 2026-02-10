@@ -155,6 +155,7 @@ private:
     std::cout << "  UPDATE                   Update data\n";
     std::cout << "  DELETE FROM              Delete data\n";
     std::cout << "  ALTER TABLE              Modify table structure\n";
+    std::cout << "  DESCRIBE [TABLE]         Show table schema\n";
     std::cout << "\n";
 
     // Examples

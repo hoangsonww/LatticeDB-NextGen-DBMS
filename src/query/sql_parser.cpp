@@ -61,6 +61,15 @@ ParsedQuery SQLParser::parse(const std::string& sql) {
     }
     return result;
   }
+  if (up.rfind("DESCRIBE", 0) == 0 || up.rfind("DESC", 0) == 0) {
+    result.type = QueryType::DESCRIBE_TABLE;
+    result.describe_table = parse_describe();
+    if (!result.describe_table) {
+      result.type = QueryType::INVALID;
+      result.error_message = "Invalid DESCRIBE";
+    }
+    return result;
+  }
   if (up.rfind("DROP TABLE", 0) == 0) {
     result.type = QueryType::DROP_TABLE;
     result.drop_table = parse_drop_table();
@@ -418,6 +427,25 @@ std::unique_ptr<CreateIndexQuery> SQLParser::parse_create_index() {
 }
 std::unique_ptr<DropIndexQuery> SQLParser::parse_drop_index() {
   return nullptr;
+}
+
+std::unique_ptr<DescribeTableQuery> SQLParser::parse_describe() {
+  auto keyword = upper(next_token());
+  if (keyword != "DESCRIBE" && keyword != "DESC")
+    return nullptr;
+
+  auto query = std::make_unique<DescribeTableQuery>();
+
+  auto peek = peek_token();
+  if (upper(peek) == "TABLE")
+    next_token();
+
+  auto table = next_token();
+  if (table.empty() || table == ";")
+    return nullptr;
+
+  query->table_name = table;
+  return query;
 }
 
 std::unique_ptr<Expression> SQLParser::parse_expression() {

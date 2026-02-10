@@ -615,6 +615,42 @@ QueryResult DatabaseEngine::execute_parsed_query(const ParsedQuery& query, Trans
     result.message = "DELETE";
     return result;
   }
+  case QueryType::DESCRIBE_TABLE: {
+    auto* meta = catalog_->get_table(query.describe_table->table_name);
+    if (!meta) {
+      result.success = false;
+      result.message = "Table not found";
+      return result;
+    }
+
+    const auto& schema = meta->get_schema();
+    result.success = true;
+    result.message = "DESCRIBE";
+    result.column_names = {"column_name", "data_type", "nullable", "default_value"};
+
+    for (const auto& column : schema.columns()) {
+      std::vector<Value> row;
+      row.emplace_back(column.name(), ValueType::TEXT);
+
+      std::string type_str = value_type_to_string(column.type());
+      if (column.type() == ValueType::VARCHAR && column.length() > 0) {
+        type_str += "(" + std::to_string(column.length()) + ")";
+      }
+      row.emplace_back(type_str, ValueType::TEXT);
+
+      row.emplace_back(column.is_nullable() ? "YES" : "NO", ValueType::TEXT);
+
+      if (column.has_default()) {
+        row.push_back(column.default_value());
+      } else {
+        row.emplace_back(Value());
+      }
+
+      result.rows.push_back(std::move(row));
+    }
+
+    return result;
+  }
   case QueryType::BEGIN: {
     // Start a new transaction
     if (!txn) {

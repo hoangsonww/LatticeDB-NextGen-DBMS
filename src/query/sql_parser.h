@@ -20,7 +20,8 @@ enum class QueryType {
   DROP_INDEX,
   BEGIN,
   COMMIT,
-  ROLLBACK
+  ROLLBACK,
+  DESCRIBE_TABLE
 };
 
 enum class ExpressionType { CONSTANT, COLUMN_REF, OPERATOR, FUNCTION, STAR, AGGREGATE };
@@ -162,6 +163,10 @@ struct DropIndexQuery {
   bool if_exists = false;
 };
 
+struct DescribeTableQuery {
+  std::string table_name;
+};
+
 struct ParsedQuery {
   QueryType type;
   std::string error_message;
@@ -175,6 +180,7 @@ struct ParsedQuery {
   std::unique_ptr<DropTableQuery> drop_table;
   std::unique_ptr<CreateIndexQuery> create_index;
   std::unique_ptr<DropIndexQuery> drop_index;
+  std::unique_ptr<DescribeTableQuery> describe_table;
 
   ParsedQuery() : type(QueryType::INVALID) {}
 };
@@ -205,6 +211,7 @@ private:
   std::unique_ptr<DropTableQuery> parse_drop_table();
   std::unique_ptr<CreateIndexQuery> parse_create_index();
   std::unique_ptr<DropIndexQuery> parse_drop_index();
+  std::unique_ptr<DescribeTableQuery> parse_describe();
 
   std::unique_ptr<Expression> parse_expression();
   std::unique_ptr<Expression> parse_and_or();

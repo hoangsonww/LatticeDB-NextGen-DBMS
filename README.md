@@ -313,6 +313,10 @@ The CLI provides an interactive shell to run SQL commands:
 
 Type `help` for a list of commands.
 
+> [!NOTE]
+> You can now run standard SQL introspection via `DESCRIBE table_name;` (or `DESC`) to view column metadata without leaving the
+> SQL workflow.
+
 > [!TIP]
 > Visit any `./latticedb` file in either `build` or `build-container` to see available options and run it so you don't have to manually build every time.
 
